@@ -10,6 +10,7 @@ const WalletWhitelistSchema = new mongoose.Schema({
         symbol: String,
         name: String,
         time: Date,
+        priceAtPurchase: Number,
         highestPrice: Number
     }]
 });
