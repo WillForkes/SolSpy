@@ -19,7 +19,7 @@ redeemScene.on('text', async (ctx) => {
     if(foundKey) {
         const successRedeem = await redeemKey(telegramId, inputtedKey);
         if(successRedeem) {
-            ctx.reply(`Successfully activated redeem key. ${foundKey.days} Days have been added onto your subscription!`);
+            ctx.reply(`🎉 Successfully activated redeem key. ${foundKey.days} Days have been added onto your subscription!`);
         } else {
             ctx.reply(`An error occured whilst redeeming key. Please contract admin.`);
         }
@@ -39,17 +39,17 @@ async function sendSignal(signal) {
 
 Token Info:
 • ❓ _${signal.tokenInfo.symbol}_ | _${signal.tokenInfo.name}_
-• 📄 *CA*: ${signal.tokenInfo.contractAddress}
-• 💦 *Market Cap*: $${signal.tokenInfo.marketCap}
-• 💸 *Invested*: $${signal.amountPurchased * signal.tokenInfo.price}
+• 📄 *CA*: \`${signal.tokenInfo.contractAddress}\`
+• 💦 *Market Cap*: ${signal.tokenInfo.marketCap == 0 ? '?' : "$" + formatNumber(signal.tokenInfo.marketCap)}
+• 💸 *Invested*: ${signal.tokenInfo.price == 0 ? parseInt(signal.amountPurchased).toString() + " Tokens" : "$" + (signal.amountPurchased * signal.tokenInfo.price).toFixed(2)}
 
 Links:
 • 🔗 [DexScreener](https://dexscreener.com/solana/${signal.tokenInfo.contractAddress})
-• 🔗 [SolScan](https://solscan.io/account/${signal.tokenInfo.contractAddress})
 • 🔗 [Photon](https://photon-sol.tinyastro.io/en/lp/${signal.tokenInfo.contractAddress})
+• 🔗 [SolScan](https://solscan.io/account/${signal.tokenInfo.contractAddress})
 
 Risks Analysis:
-• 🔎 *Score*: ${signal.tokenInfo.analysis.score > 800 ? '🔴' : signal.tokenInfo.analysis.score > 400 ? '🟡' : '🟢'} ${signal.tokenInfo.analysis.score}
+• 🔎 *Score*: ${signal.tokenInfo.analysis.score > 900 ? '🔴' : signal.tokenInfo.analysis.score > 500 ? '🟡' : '🟢'} ${signal.tokenInfo.analysis.score}
 • 🔎 *Risks*: ${signal.tokenInfo.analysis.risks.length > 0 
     ? signal.tokenInfo.analysis.risks.map(risk => 
         `\n      ∟ ${risk.level === 'danger' ? '🔴' : risk.level === 'warn' ? '🟡' : '🟢'} ${risk.name}: ${risk.description} (Score: ${risk.score})`).join('')
@@ -58,7 +58,7 @@ Risks Analysis:
 *Wallet Analysis*:
 • Coming soon...
 
-DO YOUR RESEARCH BEFORE INVESTING!
+_DO YOUR RESEARCH BEFORE INVESTING_!
     `;
 
     for (const user of users) {
@@ -70,7 +70,7 @@ DO YOUR RESEARCH BEFORE INVESTING!
                 disable_web_page_preview: true,
                 reply_markup: {
                     inline_keyboard: [
-                        [{ text: 'BonkBot', url: 'https://t.me/bonkbot_bot' }, { text: 'Unibot (Trojan)', url: 'https://t.me/UnisolUnibot' }, ]
+                        [{ text: 'BonkBot', url: 'https://t.me/bonkbot_bot' }, { text: 'Trojan Bot', url: 'https://t.me/solana_trojanbot' }]
                     ]
                 }
             }
@@ -82,6 +82,20 @@ function startBot() {
     bot.launch();
     console.log("[TELEGRAM] Bot is running");
 }
+
+function formatNumber(num) {
+    if (num >= 1000000000) {
+        return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'b';
+    }
+    if (num >= 1000000) {
+        return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'm';
+    }
+    if (num >= 1000) {
+        return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    }
+    return num;
+}
+
 
 
 // ! MIDDLEWARE ////////////////
@@ -111,7 +125,9 @@ bot.start(async (ctx) => {
         if(member.isSubscribed) {
             const startMenuText = `👁️ *Sol Spy* 👁️
 
-Welcome to Sol Spy _${ctx.from.username}_! We are the #1 Solana wallet spy bot on telegram. This bot provides buy signals from profitable wallets as they happen in real time whilst offering a range of tools to help you make a profit.
+Welcome back _${ctx.from.username}_! We are the #1 Solana wallet spy bot on telegram. This bot provides buy signals from profitable wallets as they happen in real time whilst offering a range of tools to help you make a profit.
+
+*Signals will be sent to you automatically*
 
 🔗 [Our website](https://solspy.sellpass.io)
 
@@ -123,7 +139,7 @@ Welcome to Sol Spy _${ctx.from.username}_! We are the #1 Solana wallet spy bot o
                 disable_web_page_preview: true,
                 reply_markup: {
                     inline_keyboard: [
-                        [{ text: 'Extend subscription', url: 'https://solspy.sellpass.io' }],
+                        [{ text: 'Extend subscription', url: 'https://solspy.sellpass.io/products' }],
                         [{ text: 'Redeem Key', callback_data: 'redeem' }]                        
                     ]
                 }
@@ -136,7 +152,7 @@ Welcome to Sol Spy _${ctx.from.username}_! We are the #1 Solana wallet spy bot o
 🔗 [Our website](https://solspy.sellpass.io)
 
 Our current pricing packages:
-∟ *$40* - 1 week
+∟ *$30* - 1 week
 ∟ *$80* - 1 month
 ∟ *$200* - 3 month
 
@@ -148,7 +164,7 @@ _To get access to the bot, please select an option below._
             disable_web_page_preview: true,
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: 'Buy Subscription', url: 'https://solspy.sellpass.io' }],
+                    [{ text: 'Buy Subscription', url: 'https://solspy.sellpass.io/products' }],
                     [{ text: 'Redeem Key', callback_data: 'redeem' }]
                     
                 ]

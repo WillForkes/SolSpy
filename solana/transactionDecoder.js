@@ -11,14 +11,18 @@ require('dotenv').config();
 
 async function checkWallet(walletAddress) {
     const connection = new web3.Connection("https://quick-cosmopolitan-wildflower.solana-mainnet.quiknode.pro/310d1a487450d1023077e90f88c74b7e0e838ad9/", 'confirmed');
-    let pubkey;
+    const pubkey = new web3.PublicKey(walletAddress);
+    let signatureArray;
     let transaction;
 
-    pubkey = new web3.PublicKey(walletAddress);
-    const confirmedTransactionSignatures = await connection.getConfirmedSignaturesForAddress2(pubkey, {limit: 2});
-    const signatureArray = confirmedTransactionSignatures.map(signatureInfo => signatureInfo.signature);
-
-    transaction = await connection.getParsedTransaction(signatureArray[0], { commitment: 'confirmed', maxSupportedTransactionVersion: 0 });
+    try {
+        const confirmedTransactionSignatures = await connection.getConfirmedSignaturesForAddress2(pubkey, {limit: 2});
+        signatureArray = confirmedTransactionSignatures.map(signatureInfo => signatureInfo.signature);
+        transaction = await connection.getParsedTransaction(signatureArray[0], { commitment: 'confirmed', maxSupportedTransactionVersion: 0 });
+    } catch {
+        console.warn("Too many requests coming from " + walletAddress + "...")
+        return;
+    }
 
     // Check if within last 5 mins
     if(transaction == null) {
@@ -57,7 +61,7 @@ async function checkWallet(walletAddress) {
     // Get signal data
     const signal = await detectTokenTransfers(transaction, pubkey.toBase58())
     if(signal) {
-        const isDup = await isDuplicateSignal(pubkey.toBase58(), signal.tokenInfo.symbol)
+        const isDup = await isDuplicateSignal(signal.tokenInfo.symbol)
         if(!isDup) {
             // Log signal to DB
             await addSignal(signal)

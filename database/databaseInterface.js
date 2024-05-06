@@ -61,7 +61,7 @@ async function registerMember(telegramId) {
     await member.save();
 }
 
-async function isDuplicateSignal(address, symbol) {
+async function isDuplicateSignal(symbol) {
     const signals = await getAllSignals();
     let isDup = false;
 
@@ -73,7 +73,7 @@ async function isDuplicateSignal(address, symbol) {
         // Compare times directly in milliseconds
         let isWithin10Hours = signalTime >= tenHoursAgo;
 
-        if (signal.walletAddress === address && signal.tokenInfo.symbol === symbol && isWithin10Hours) {
+        if (signal.tokenInfo.symbol === symbol && isWithin10Hours) {
             isDup = true;
             break;
         }

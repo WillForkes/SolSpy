@@ -1,14 +1,25 @@
 const axios = require('axios');
 
-async function getUSDPrice(mint) {
-    const priceResponse = await axios.get("https://price.jup.ag/v4/price?ids=" + mint);
-    const priceData = priceResponse.data;
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-    if(priceData.data != {}) {
-        return priceData.data[mint].price;
-    } else {
-        return 0
+async function getUSDPrice(mint) {
+    let tries = 0;
+
+    while(tries < 4) {
+        const priceResponse = await axios.get("https://price.jup.ag/v4/price?ids=" + mint);
+        const priceData = priceResponse.data;
+
+        if(JSON.stringify(priceData.data) === '{}') {
+            tries++;
+            await delay(300);
+        } else {
+            return priceData.data[mint].price.toFixed(2);
+        }
     }
+    
+    return 0;
 }
 
 async function getTokenPriceHistory(mint, purchaseTime) {
