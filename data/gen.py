@@ -15,4 +15,4 @@ def generate_serial_number(suffix):
 
 # Example usage
 for i in range(100):
-    print(generate_serial_number("|7"))
+    print(generate_serial_number("|90"))
