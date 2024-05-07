@@ -42,13 +42,18 @@ async function getTokenInfo(mint) {
     // Get price data
     let priceData = await getPriceData(mint);
     if(!priceData) {return}
-    
+
     // Calculate
     let supply = adjustSupplyByDecimals(rugCheckData.token.supply, rugCheckData.token.decimals);
     
     
     let currPrice = priceData.price;
     let marketCap = (currPrice != 0) ? currPrice * supply : 0;
+
+    if(marketCap < 350000) {
+        return
+    }
+
     let liquidity = priceData.liquidity;
     let dayVolume = priceData.dayVolume;
 

@@ -64,19 +64,24 @@ _DO YOUR RESEARCH BEFORE INVESTING_!
     `;
 
     for (const user of users) {
-        await bot.telegram.sendMessage(
-            user.telegramId, 
-            signalMsg, 
-            { 
-                parse_mode: 'Markdown', 
-                disable_web_page_preview: true,
-                reply_markup: {
-                    inline_keyboard: [
-                        [{ text: 'BonkBot', url: 'https://t.me/bonkbot_bot' }, { text: 'Trojan Bot', url: 'https://t.me/solana_trojanbot' }]
-                    ]
+        try {
+            await bot.telegram.sendMessage(
+                user.telegramId, 
+                signalMsg, 
+                { 
+                    parse_mode: 'Markdown', 
+                    disable_web_page_preview: true,
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: 'BonkBot', url: 'https://t.me/bonkbot_bot' }, { text: 'Trojan Bot', url: 'https://t.me/solana_trojanbot' }]
+                        ]
+                    }
                 }
-            }
-        );
+            );
+        } catch(error) {
+            console.error("Failed sending message to telegram user: " + user.telegramId + " - " + error);
+        }
+        
     }
 }
 
