@@ -21,6 +21,8 @@ const SignalSchema = new Schema({
         decimals: Number,
         supply: Number,
         price: Number,
+        liquidity: Number,
+        dayVolume: Number,
         marketCap: Number,
         contractAddress: String
     },

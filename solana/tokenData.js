@@ -1,5 +1,5 @@
 const axios = require('axios');
-const {getUSDPrice} = require('./priceTracker.js')
+const {getPriceData} = require('./priceTracker.js')
 
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -10,14 +10,17 @@ function adjustSupplyByDecimals(supply, decimals) {
     return Math.floor(supply / factor);
 }
 
-async function getTokenInfo(mint) {
-    let response;
+async function getRugCheckData(mint) {
     let retries = 0;
+    let response;
 
     while(true) {
         try {
             response = await axios.get("https://api.rugcheck.xyz/v1/tokens/" + mint + "/report");
-            break;
+            if(!response.data) {
+                return
+            }
+            return response.data;
         } catch (error) {
             retries++;
 
@@ -28,40 +31,47 @@ async function getTokenInfo(mint) {
             
             await delay(1000);
         }
-    }
+    }    
+}
 
-    if(!response.data) {
-        return;
-    }
+async function getTokenInfo(mint) {
+    // Get risk analysis
+    const rugCheckData = await getRugCheckData(mint);
+    if(!rugCheckData) {return}
+
+    // Get price data
+    let priceData = await getPriceData(mint);
+    if(!priceData) {return}
     
-    const data = response.data;
-
-    let supply = adjustSupplyByDecimals(data.token.supply, data.token.decimals);
-    let currPrice = await getUSDPrice(mint);
-    let marketCap = 0;
-
-    if(currPrice != 0) {
-        marketCap = currPrice * supply;
-    }
+    // Calculate
+    let supply = adjustSupplyByDecimals(rugCheckData.token.supply, rugCheckData.token.decimals);
+    
+    
+    let currPrice = priceData.price;
+    let marketCap = (currPrice != 0) ? currPrice * supply : 0;
+    let liquidity = priceData.liquidity;
+    let dayVolume = priceData.dayVolume;
 
     const info = {
-        name: data.tokenMeta.name,
-        symbol: data.tokenMeta.symbol,
+        name: rugCheckData.tokenMeta.name,
+        symbol: rugCheckData.tokenMeta.symbol,
         analysis: {
-            mintAuthority: data.token.mintAuthority,
-            freezeAuthority: data.token.freezeAuthority,
-            risks: data.risks,
-            score: data.score,
-            rugged: data.rugged
+            mintAuthority: rugCheckData.token.mintAuthority,
+            freezeAuthority: rugCheckData.token.freezeAuthority,
+            risks: rugCheckData.risks,
+            score: rugCheckData.score,
+            rugged: rugCheckData.rugged
         },
-        decimals: data.token.decimals,
+        decimals: rugCheckData.token.decimals,
         supply: supply,
         price: currPrice,
         marketCap: marketCap,
+        liquidity: liquidity,
+        dayVolume: dayVolume,
         contractAddress: mint
     };
 
     return info;
 }
 
-module.exports = {getTokenInfo, getUSDPrice}
+module.exports = {getTokenInfo}
