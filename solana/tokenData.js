@@ -74,6 +74,7 @@ async function getTokenInfo(mint) {
             score: rugCheckData.score,
             rugged: rugCheckData.rugged
         },
+        sentiment: priceData.sentiment,
         decimals: rugCheckData.token.decimals,
         supply: supply,
         price: currPrice,
@@ -91,8 +92,15 @@ async function getPriceData(mint) {
         const response = await axios.get("https://api.dexscreener.com/latest/dex/tokens/" + mint);
         const priceData = response.data;
         const priceObj = priceData.pairs[0];
-    
+
+        const h24Sentiment = calculateSentiment(priceObj.txs.h24.buys, priceObj.txs.h24.sells);
+        const h1Sentiment = calculateSentiment(priceObj.txs.h1.buys, priceObj.txs.h1.sells);
+        
         const obj = {
+            sentiment: {
+                h1: h1Sentiment,
+                h24: h24Sentiment
+            },
             dayVolume: priceObj.volume.h24,
             liquidity: priceObj.liquidity.usd,
             price: parseFloat(priceObj.priceUsd),
@@ -103,7 +111,29 @@ async function getPriceData(mint) {
     } catch {
         return
     }
-    
+}
+
+function calculateSentiment(buys, sells) {
+    if(sells == 0) {
+        return 0;
+    }
+
+    const ratio = buys / sells;
+    if(ratio > 1.5) {
+        return "Very bullish";
+    } 
+    else if(ratio > 1.2) {
+        return "Bullish";
+    }
+    else if(ratio < 0.5) {
+        return "Very bearish";
+    } 
+    else if(ratio < 0.8) {
+        return "Bearish";   
+    } 
+    else {
+        return "Neutral";
+    }
 }
 
 module.exports = {getTokenInfo}

@@ -45,13 +45,17 @@ Token Info:
 • ⏰ *24h Volume*: ${signal.tokenInfo.dayVolume == 0 ? '?' : "$" + formatNumber(signal.tokenInfo.dayVolume)}
 • 💸 *Invested*: ${signal.tokenInfo.price == 0 ? parseInt(signal.amountPurchased).toString() + " Tokens" : "$" + (signal.amountPurchased * signal.tokenInfo.price).toFixed(2)}
 
+Sentiment:
+• 1h - ${"neutral" in signal.sentiment.h1.toLowerCase() ? '❓' : "bullish" in signal.sentiment.h1.toLowerCase() ? '🚀' : '🐻'}: ${signal.sentiment.h1}
+• 24h - ${"neutral" in signal.sentiment.h24.toLowerCase() ? '❓' : "bullish" in signal.sentiment.h24.toLowerCase() ? '🚀' : '🐻'}: ${signal.sentiment.h24}
+
 Links:
 • 🔗 [DexScreener](https://dexscreener.com/solana/${signal.tokenInfo.contractAddress})
 • 🔗 [Photon](https://photon-sol.tinyastro.io/en/lp/${signal.tokenInfo.contractAddress})
 • 🔗 [SolScan](https://solscan.io/account/${signal.tokenInfo.contractAddress})
 
 Risks Analysis:
-• 🔎 *Score*: ${signal.tokenInfo.analysis.score > 900 ? '🔴' : signal.tokenInfo.analysis.score > 500 ? '🟡' : '🟢'} ${signal.tokenInfo.analysis.score}
+• 🔎 *Total Score*: ${signal.tokenInfo.analysis.score > 900 ? '🔴' : signal.tokenInfo.analysis.score > 500 ? '🟡' : '🟢'} ${signal.tokenInfo.analysis.score}
 • 🔎 *Risks*: ${signal.tokenInfo.analysis.risks.length > 0 
     ? signal.tokenInfo.analysis.risks.map(risk => 
         `\n      ∟ ${risk.level === 'danger' ? '🔴' : risk.level === 'warn' ? '🟡' : '🟢'} ${risk.name}: ${risk.description} (Score: ${risk.score})`).join('')
