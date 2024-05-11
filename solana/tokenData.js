@@ -1,5 +1,4 @@
 const axios = require('axios');
-const {getPriceData} = require('./priceTracker.js')
 
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -44,13 +43,21 @@ async function getTokenInfo(mint) {
     if(!priceData) {return}
 
     // Calculate
-    let supply = adjustSupplyByDecimals(rugCheckData.token.supply, rugCheckData.token.decimals);
+    let supply;
+    try{
+        supply = adjustSupplyByDecimals(rugCheckData.token.supply, rugCheckData.token.decimals);
+    } catch {
+        return
+    }
     
+    const currPrice = priceData.price;
+    const marketCap = (currPrice != 0) ? currPrice * supply : 0;
     
-    let currPrice = priceData.price;
-    let marketCap = (currPrice != 0) ? currPrice * supply : 0;
+    // Check if coin was created within last 2 hours
+    const currentTimestamp = Math.floor(Date.now() / 1000) - (2 * 3600); 
+    const isNewcoin = currentTimestamp >= priceData.pairCreatedAt;
 
-    if(marketCap < 350000) {
+    if(isNewcoin == false && marketCap < 400000) {
         return
     }
 
@@ -77,6 +84,26 @@ async function getTokenInfo(mint) {
     };
 
     return info;
+}
+
+async function getPriceData(mint) {
+    try {
+        const response = await axios.get("https://api.dexscreener.com/latest/dex/tokens/" + mint);
+        const priceData = response.data;
+        const priceObj = priceData.pairs[0];
+    
+        const obj = {
+            dayVolume: priceObj.volume.h24,
+            liquidity: priceObj.liquidity.usd,
+            price: parseFloat(priceObj.priceUsd),
+            pairCreatedAt: priceObj.pairCreatedAt //unix timestamp
+        }
+    
+        return obj;
+    } catch {
+        return
+    }
+    
 }
 
 module.exports = {getTokenInfo}
