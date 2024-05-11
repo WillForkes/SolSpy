@@ -178,4 +178,4 @@ async function redeemKey(telegramId, key) {
 
 
 
-module.exports = { addWalletToWhitelist, removeWalletFromWhitelist, getAllWallets, addSignal, addPurchaseToWallet, getPurchasesForWallet, registerMember, isDuplicateSignal, doesMemberExist, getAllMembers, getMember, getKey, redeemKey, getAllMembersWithSubscription, addKey}
+module.exports = { getAllSignals, addWalletToWhitelist, removeWalletFromWhitelist, getAllWallets, addSignal, addPurchaseToWallet, getPurchasesForWallet, registerMember, isDuplicateSignal, doesMemberExist, getAllMembers, getMember, getKey, redeemKey, getAllMembersWithSubscription, addKey}
