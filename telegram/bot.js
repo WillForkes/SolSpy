@@ -136,7 +136,7 @@ bot.start(async (ctx) => {
         if(member.isSubscribed) {
             const startMenuText = `👁️ *Sol Spy* 👁️
 
-Welcome back _${ctx.from.username}_! We are the #1 Solana wallet spy bot on telegram. This bot provides buy signals from profitable wallets as they happen in real time whilst offering a range of tools to help you make a profit.
+Welcome back <code>${ctx.from.username}</code>! We are the #1 Solana wallet spy bot on telegram. This bot provides buy signals from profitable wallets as they happen in real time whilst offering a range of tools to help you make a profit.
 
 *Signals will be sent to you automatically*
 
