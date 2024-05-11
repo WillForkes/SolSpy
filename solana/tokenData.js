@@ -54,10 +54,10 @@ async function getTokenInfo(mint) {
     const marketCap = (currPrice != 0) ? currPrice * supply : 0;
     
     // Check if coin was created within last 2 hours
-    const currentTimestamp = Math.floor(Date.now() / 1000) - (2 * 3600); 
-    const isNewcoin = currentTimestamp >= priceData.pairCreatedAt;
+    const twohoursAgo = Math.floor(Date.now() / 1000) - (2 * 3600); 
+    const isNewcoin = twohoursAgo >= priceData.pairCreatedAt;
 
-    if(isNewcoin == false && marketCap < 400000) {
+    if(isNewcoin == false && marketCap < 350000) {
         return
     }
 
