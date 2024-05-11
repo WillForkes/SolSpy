@@ -14,5 +14,12 @@ def generate_serial_number(suffix):
     return full_serial_number
 
 # Example usage
-for i in range(100):
+for i in range(50):
+    print(generate_serial_number("|7"))
+
+for i in range(50):
+    print(generate_serial_number("|30"))
+
+for i in range(50):
     print(generate_serial_number("|90"))
+
