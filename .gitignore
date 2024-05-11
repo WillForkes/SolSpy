@@ -1,2 +1,4 @@
 node_modules/
 .env
+data/new_keys.txt
+data/new_wallets.txt
