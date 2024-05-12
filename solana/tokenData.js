@@ -57,7 +57,7 @@ async function getTokenInfo(mint) {
     const twohoursAgo = Math.floor(Date.now() / 1000) - (2 * 3600); 
     const isNewcoin = priceData.pairCreatedAt >= twohoursAgo;
 
-    if (!isNewcoin && marketCap < 350000) {
+    if (marketCap < 350000) {
         return;
     }
 
