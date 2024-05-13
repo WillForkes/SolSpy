@@ -36,8 +36,8 @@ redeemScene.on('text', async (ctx) => {
 async function sendSignal(signal) {
     const users = await getAllMembersWithSubscription("Pro");
     
-    const sentimentEmoji1h = signal.tokenInfo.sentiment.h1.includes('neutral') ? '❓' : signal.tokenInfo.sentiment.h1.includes('bullish') ? '🚀' : '🐻';
-    const sentimentEmoji24h = signal.tokenInfo.sentiment.h24.includes('neutral') ? '❓' : signal.tokenInfo.sentiment.h24.includes('bullish') ? '🚀' : '🐻';
+    const sentimentEmoji1h = signal.tokenInfo.sentiment.h1.toLowerCase().includes('neutral') ? '❓' : signal.tokenInfo.sentiment.h1.toLowerCase().includes('bullish') ? '🚀' : '🐻';
+    const sentimentEmoji24h = signal.tokenInfo.sentiment.h24.toLowerCase().includes('neutral') ? '❓' : signal.tokenInfo.sentiment.h24.toLowerCase().includes('bullish') ? '🚀' : '🐻';
     
     const signalMsg = `💎 *Wallet Buy Alert* 💎
 
