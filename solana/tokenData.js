@@ -53,10 +53,6 @@ async function getTokenInfo(mint) {
     const currPrice = priceData.price;
     const marketCap = (currPrice != 0) ? currPrice * supply : 0;
     
-    // Check if coin was created within last 2 hours
-    const twohoursAgo = Math.floor(Date.now() / 1000) - (2 * 3600); 
-    const isNewcoin = priceData.pairCreatedAt >= twohoursAgo;
-
     if (marketCap < 350000) {
         return;
     }
@@ -93,8 +89,8 @@ async function getPriceData(mint) {
         const priceData = response.data;
         const priceObj = priceData.pairs[0];
 
-        const h24Sentiment = calculateSentiment(priceObj.txs.h24.buys, priceObj.txs.h24.sells);
-        const h1Sentiment = calculateSentiment(priceObj.txs.h1.buys, priceObj.txs.h1.sells);
+        const h24Sentiment = calculateSentiment(priceObj.txns.h24.buys, priceObj.txns.h24.sells);
+        const h1Sentiment = calculateSentiment(priceObj.txns.h1.buys, priceObj.txns.h1.sells);
         
         const obj = {
             sentiment: {
