@@ -46,8 +46,8 @@ Token Info:
 • 💸 *Invested*: ${signal.tokenInfo.price == 0 ? parseInt(signal.amountPurchased).toString() + " Tokens" : "$" + (signal.amountPurchased * signal.tokenInfo.price).toFixed(2)}
 
 Sentiment:
-• 1h - ${"neutral" in signal.sentiment.h1.toLowerCase() ? '❓' : "bullish" in signal.sentiment.h1.toLowerCase() ? '🚀' : '🐻'}: ${signal.sentiment.h1}
-• 24h - ${"neutral" in signal.sentiment.h24.toLowerCase() ? '❓' : "bullish" in signal.sentiment.h24.toLowerCase() ? '🚀' : '🐻'}: ${signal.sentiment.h24}
+• 1h - ${"neutral" in signal.tokenInfo.sentiment.h1.toLowerCase() ? '❓' : "bullish" in signal.tokenInfo.sentiment.h1.toLowerCase() ? '🚀' : '🐻'}: ${signal.tokenInfo.sentiment.h1}
+• 24h - ${"neutral" in signal.tokenInfo.sentiment.h24.toLowerCase() ? '❓' : "bullish" in signal.tokenInfo.sentiment.h24.toLowerCase() ? '🚀' : '🐻'}: ${signal.tokenInfo.sentiment.h24}
 
 Links:
 • 🔗 [DexScreener](https://dexscreener.com/solana/${signal.tokenInfo.contractAddress})
