@@ -57,7 +57,7 @@ async function getTokenInfo(mint) {
     const currentTime = Math.floor(Date.now() / 1000);
     const launchedInLast2h = priceData.pairCreatedAt > (currentTime - 7200)
 
-    if (!launchedInLast2h && marketCap < 500000) {
+    if (!launchedInLast2h && marketCap < 400000) {
         return;
     }
 
