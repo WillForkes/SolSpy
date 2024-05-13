@@ -53,7 +53,11 @@ async function getTokenInfo(mint) {
     const currPrice = priceData.price;
     const marketCap = (currPrice != 0) ? currPrice * supply : 0;
     
-    if (marketCap < 350000) {
+    // Check if token was launched within the last 2 hours
+    const currentTime = Math.floor(Date.now() / 1000);
+    const launchedInLast2h = priceData.pairCreatedAt > (currentTime - 7200)
+
+    if (!launchedInLast2h && marketCap < 500000) {
         return;
     }
 
