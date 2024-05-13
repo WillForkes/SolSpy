@@ -70,7 +70,7 @@ async function main() {
 
 cron.schedule('*/5 * * * *', () => {
     console.log('Running stat tracker...');
-    runTracker().then(() => {
+    startTrackingPrices().then(() => {
         console.log('Statistics run completed. CSV file updated.');
     }).catch(error => {
         console.error('Error gathering statistics:', error);
