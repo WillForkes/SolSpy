@@ -68,6 +68,10 @@ async function getTokenInfo(mint) {
     let liquidity = priceData.liquidity;
     let dayVolume = priceData.dayVolume;
 
+    if(dayVolume < liquidity) {
+        return;
+    }
+
     const info = {
         name: rugCheckData.tokenMeta.name,
         symbol: rugCheckData.tokenMeta.symbol,
