@@ -55,11 +55,15 @@ async function getTokenInfo(mint) {
     
     // Check if token was launched within the last 2 hours
     const currentTime = Math.floor(Date.now() / 1000);
-    const launchedInLast2h = priceData.pairCreatedAt > (currentTime - 7200)
+    const launchedInLast2h = priceData.pairCreatedAt > (currentTime - 7200);
 
-    if (!launchedInLast2h && marketCap < 400000) {
+    const marketCapThreshold = launchedInLast2h ? 150000 : 450000;
+
+    // Check if market capitalization meets threshold
+    if (marketCap < marketCapThreshold) {
         return;
     }
+
 
     let liquidity = priceData.liquidity;
     let dayVolume = priceData.dayVolume;
