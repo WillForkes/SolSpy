@@ -33,32 +33,6 @@ async function loadNewKeys() {
     }
 }
 
-async function loadNewWallets() {
-    try {
-        // Create a readable stream from the file
-        const fileStream = fs.createReadStream("./data/new_wallets.txt");
-
-        // Create an interface to read line by line
-        const rl = readline.createInterface({
-            input: fileStream,
-            crlfDelay: Infinity // Recognize all instances of CR LF ('\r\n') as a single line break.
-        });
-
-        let dataEntries = [];
-
-        // Event listener for the line event, which is emitted when readline reads a line from the stream
-        for await (const line of rl) {
-            dataEntries.push(line);
-        }
-
-        clearFile("./data/new_wallets.txt");
-        return dataEntries;
-    } catch (error) {
-        console.error('Failed to process file:', error);
-        return []; // Return an empty array in case of error
-    }
-}
-
 function clearFile(filePath) {
     fs.writeFile(filePath, '', (err) => {
         if (err) {
@@ -69,4 +43,4 @@ function clearFile(filePath) {
     });
 }
 
-module.exports = { loadNewKeys, loadNewWallets }
+module.exports = { loadNewKeys }

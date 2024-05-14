@@ -1,13 +1,14 @@
 const { Telegraf, Markup, Scenes, session } = require('telegraf');
 const { message } = require("telegraf/filters");
-const { doesMemberExist, registerMember, getAllMembersWithSubscription, getMember, getKey, redeemKey } = require("../database/databaseInterface");
+const { doesMemberExist, registerMember, getAllMembersWithSubscription, getMember, getKey, redeemKey, addWalletToUserWatchlist, removeWalletFromUserWatchlist } = require("../database/databaseInterface");
 require("dotenv").config();
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 const stage = new Scenes.Stage();
 const redeemScene = new Scenes.BaseScene('redeemScene');
-
+const addWalletScene = new Scenes.BaseScene('addWalletScene');
+const removeWalletScene = new Scenes.BaseScene('removeWalletScene');
 
 // ! REDEEM KEY SCENE
 redeemScene.enter((ctx) => ctx.reply('Please reply to this message with your redeem key.'));
@@ -31,15 +32,71 @@ redeemScene.on('text', async (ctx) => {
     ctx.scene.leave();
 });
 
+// ! ADD WALLET SCENE
+addWalletScene.enter((ctx) => ctx.reply(`Please reply to this message with the Solana wallet you want to start tracking.
+
+Please note, wallets that have extremely high transaction volumes (such as bots, exchanges, snipers, etc) *will be removed*.
+
+_You can only track up to 3 wallets at a time._
+`, { parse_mode: 'Markdown' }));
+addWalletScene.on('text', async (ctx) => {
+    const inputtedWallet = ctx.message.text;
+
+    // Validate if the wallet is a valid solana wallet address
+    if(!isValidSolanaAddress(inputtedWallet)){
+        ctx.reply('Invalid Solana wallet address. Please try again.');
+        ctx.scene.leave();
+        return;
+    } 
+
+    const telegramId = ctx.from.id.toString();
+
+    const successAdd = await addWalletToUserWatchlist(telegramId, inputtedWallet);
+    if(successAdd === true) {
+        ctx.reply(`👀️️️️️️ Successfully started watching wallet: ${inputtedWallet}!`);
+        ctx.scene.leave();
+    } else {
+        ctx.reply(successAdd);
+        ctx.scene.leave();
+        return;
+    }
+});
+
+// ! REMOVE WALLET SCENE
+removeWalletScene.enter((ctx) => ctx.reply('Please reply to this message with the Solana wallet you want to stop tracking.'));
+removeWalletScene.on('text', async (ctx) => {
+    const inputtedWallet = ctx.message.text;
+
+    // Validate if the wallet is a valid solana wallet address
+    if(!isValidSolanaAddress(inputtedWallet)){
+        ctx.reply('Invalid Solana wallet address. Please try again.');
+        ctx.scene.leave();
+        return;
+    } 
+
+    const telegramId = ctx.from.id.toString();
+
+    const successRemove = await removeWalletFromUserWatchlist(telegramId, inputtedWallet);
+    if(successRemove === true) {
+        ctx.reply(`🗑️ Successfully removed wallet from watchlist: ${inputtedWallet}!`);
+        ctx.scene.leave();
+    } else {
+        ctx.reply(successRemove);
+        ctx.scene.leave();
+        return;
+    }
+});
+
+
 
 // ! FUNCTIONS
 async function sendSignal(signal) {
     const users = await getAllMembersWithSubscription("Pro");
-    
+
     const sentimentEmoji1h = signal.tokenInfo.sentiment.h1.toLowerCase().includes('neutral') ? '❓' : signal.tokenInfo.sentiment.h1.toLowerCase().includes('bullish') ? '🚀' : '🐻';
     const sentimentEmoji24h = signal.tokenInfo.sentiment.h24.toLowerCase().includes('neutral') ? '❓' : signal.tokenInfo.sentiment.h24.toLowerCase().includes('bullish') ? '🚀' : '🐻';
     
-    const signalMsg = `💎 *Wallet Buy Alert* 💎
+    let signalMsg = `💎 *Wallet Buy Alert* 💎
 
 Token Info:
 • ❓ _${signal.tokenInfo.symbol}_ | _${signal.tokenInfo.name}_
@@ -72,25 +129,61 @@ Risks Analysis:
 _DO YOUR RESEARCH BEFORE INVESTING_!
     `;
 
+    let isBeingWatched = false;
     for (const user of users) {
-        try {
-            await bot.telegram.sendMessage(
-                user.telegramId, 
-                signalMsg, 
-                { 
-                    parse_mode: 'Markdown', 
-                    disable_web_page_preview: true,
-                    reply_markup: {
-                        inline_keyboard: [
-                            [{ text: 'BonkBot', url: 'https://t.me/bonkbot_bot' }, { text: 'Trojan Bot', url: 'https://t.me/solana_trojanbot' }]
-                        ]
-                    }
+        if(isBeingWatched) break;
+
+        for (const wallet of user.watching) {
+            if(wallet.walletAddress === signal.walletAddress) {
+                isBeingWatched = true;
+                signalMsg += `\n\n👀 *You are watching this wallet!*`;
+
+                // * Send signal to just this user
+                try {
+                    await bot.telegram.sendMessage(
+                        user.telegramId, 
+                        signalMsg, 
+                        { 
+                            parse_mode: 'Markdown', 
+                            disable_web_page_preview: true,
+                            reply_markup: {
+                                inline_keyboard: [
+                                    [{ text: 'BonkBot', url: 'https://t.me/bonkbot_bot' }, { text: 'Trojan Bot', url: 'https://t.me/solana_trojanbot' }]
+                                ]
+                            }
+                        }
+                    );
+                } catch(error) {
+                    console.error("Failed sending message to telegram user: " + user.telegramId + " - " + error);
                 }
-            );
-        } catch(error) {
-            console.error("Failed sending message to telegram user: " + user.telegramId + " - " + error);
+
+                break;
+            }
         }
-        
+    }
+
+    // * Send signal to all users if not being watched by just one user
+    if(!isBeingWatched) {
+        for (const user of users) {
+            try {
+                await bot.telegram.sendMessage(
+                    user.telegramId, 
+                    signalMsg, 
+                    { 
+                        parse_mode: 'Markdown', 
+                        disable_web_page_preview: true,
+                        reply_markup: {
+                            inline_keyboard: [
+                                [{ text: 'BonkBot', url: 'https://t.me/bonkbot_bot' }, { text: 'Trojan Bot', url: 'https://t.me/solana_trojanbot' }]
+                            ]
+                        }
+                    }
+                );
+
+            } catch(error) {
+                console.error("Failed sending message to telegram user: " + user.telegramId + " - " + error);
+            }
+        }
     }
 }
 
@@ -112,10 +205,20 @@ function formatNumber(num) {
     return num;
 }
 
+function isValidSolanaAddress(address) {
+    // Regular expression to match a Solana wallet address
+    const solanaAddressRegex = /^([1-9A-HJ-NP-Za-km-z]{32,44})$/;
+
+    // Check if the address matches the regex pattern
+    return solanaAddressRegex.test(address);
+}
+
 
 
 // ! MIDDLEWARE ////////////////
 stage.register(redeemScene);
+stage.register(addWalletScene);
+stage.register(removeWalletScene);
 bot.use(session());
 bot.use(stage.middleware());
 
@@ -123,6 +226,14 @@ bot.use(stage.middleware());
 // !CALLBACKS
 bot.action('redeem', (ctx) => {
     ctx.scene.enter('redeemScene');
+});
+
+bot.action('add_wallet', (ctx) => {
+    ctx.scene.enter('addWalletScene');
+});
+
+bot.action('remove_wallet', (ctx) => {
+    ctx.scene.enter('removeWalletScene');
 });
 
 
@@ -196,6 +307,44 @@ _To get access to the bot, please select an option below._
 
 bot.command('redeem', (ctx) => ctx.scene.enter('redeemScene'));
 
+bot.command('add_wallet', async (ctx) => {
+    const telegramId = ctx.from.id.toString();
+    const member = await getMember(telegramId);
+
+    if(member.isSubscribed) {  
+        ctx.scene.enter('addWalletScene');
+    } else {
+        ctx.reply('You need to be subscribed to use this feature. Please buy a subscription first.');
+    }
+});
+
+bot.command('remove_wallet', async (ctx) => {
+    const telegramId = ctx.from.id.toString();
+    const member = await getMember(telegramId);
+
+    if(member.isSubscribed) {
+        ctx.scene.enter('removeWalletScene');
+    } else {
+        ctx.reply('You need to be subscribed to use this feature. Please buy a subscription first.');
+    }
+});
+
+bot.command('watchlist', async (ctx) => {
+    const telegramId = ctx.from.id.toString();
+    const member = await getMember(telegramId);
+
+    if(member.isSubscribed) {
+        if(member.watching.length === 0) {
+            ctx.reply('You are not watching any wallets.');
+            return;
+        }
+        const watchingList = member.watching.map(wallet => wallet.walletAddress).join('\n');
+        ctx.reply(`👀 **Your current watchlist** 👀
+${watchingList}`, { parse_mode: 'Markdown' });
+    } else {
+        ctx.reply('You need to be subscribed to use this feature. Please buy a subscription first.');
+    }
+});
 
 // ! Enable graceful stop
 process.once("SIGINT", () => bot.stop("SIGINT"))

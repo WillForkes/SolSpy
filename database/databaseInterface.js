@@ -10,10 +10,9 @@ const { bool } = require('@project-serum/borsh');
 // Connect to Database
 connectDB();
 
-async function addWalletToWhitelist(address, lastPurchases) {
+async function addWalletToWhitelist(address) {
     const newWallet = new WalletWhitelist({
-        walletAddress: address,
-        lastPurchases: lastPurchases,
+        walletAddress: address
     });
     await newWallet.save();
 };
@@ -21,17 +20,6 @@ async function addWalletToWhitelist(address, lastPurchases) {
 async function getAllSignals() {
     const signals = await Signals.find({}).exec();
     return signals;
-}
-
-async function addPurchaseToWallet(address, purchase) {
-    const wallet = await WalletWhitelist.findOne({"walletAddress": address}).exec();
-    wallet.lastPurchases.push(purchase)
-    await wallet.save();
-}
-
-async function getPurchasesForWallet(address) {
-    const wallet = await WalletWhitelist.findOne({"walletAddress": address}).exec();
-    return wallet.lastPurchases;
 }
 
 async function addSignal(signal) {
@@ -54,7 +42,6 @@ async function registerMember(telegramId) {
         isSubscribed: false,
         subscriptionEndDate: null,
         subscriptionType: "",
-        purchases: []
     };
 
     const member = new Members(memberObj);
@@ -176,6 +163,87 @@ async function redeemKey(telegramId, key) {
     }
 }
 
+async function addWalletToUserWatchlist(telegramId, walletAddress) {
+    try {
+        const member = await getMember(telegramId);
+        if(!member) {
+            return "Member not found!";
+        }
 
+        // check to see if the user already has the wallet in their watching list
+        for (let wallet of member.watching) {
+            if(wallet.walletAddress === walletAddress) {
+                return "You are already watching this wallet!";
+            }
+        }
 
-module.exports = { getAllSignals, addWalletToWhitelist, removeWalletFromWhitelist, getAllWallets, addSignal, addPurchaseToWallet, getPurchasesForWallet, registerMember, isDuplicateSignal, doesMemberExist, getAllMembers, getMember, getKey, redeemKey, getAllMembersWithSubscription, addKey}
+        // Check to see if user has 3 wallets already
+        if(member.watching.length >= 3) {
+            return "You are already watching 3 wallets. Please remove a wallet before adding another.";
+        }
+
+        // Check to see if wallet exists in the WalletWhitelist
+        const wallet = await WalletWhitelist.findOne({walletAddress: walletAddress});
+        if(wallet) {
+            return "Wallet is already being watched by SolSpy!";
+        }
+
+        const watching = member.watching;
+        watching.push({walletAddress: walletAddress});
+    
+        await Member.updateOne({telegramId: telegramId}, {
+            $set: {watching: watching}
+        });
+
+        return true;
+    } catch (error) {
+        console.error('Error adding wallet to user watchlist:', error);
+        return "An unexpected error occured. Please contact admin.";
+    }
+}
+
+async function removeWalletFromUserWatchlist(telegramId, walletAddress) {
+    try {
+        const member = await getMember(telegramId);
+        if(!member) {
+            return "Member not found!";
+        }
+
+        const watching = member.watching;
+        let walletIndex = -1;
+        for (let i = 0; i < watching.length; i++) {
+            if(watching[i].walletAddress === walletAddress) {
+                walletIndex = i;
+                break;
+            }
+        }
+
+        if(walletIndex === -1) {
+            return "Wallet not found in your watchlist!";
+        }
+
+        watching.splice(walletIndex, 1);
+
+        await Member.updateOne({telegramId: telegramId}, {
+            $set: {watching: watching}
+        });
+
+        return true;
+    } catch (error) {
+        console.error('Error removing wallet from user watchlist:', error);
+        return "An unexpected error occured. Please contact admin.";
+    }
+}
+
+async function getAllUserWatchlistWallets() {
+    const members = await getAllMembers();
+    let wallets = [];
+    for (let member of members) {
+        for (let wallet of member.watching) {
+            wallets.push(wallet);
+        }
+    }
+    return wallets;
+}
+
+module.exports = { getAllSignals, addWalletToWhitelist, getAllUserWatchlistWallets, addWalletToUserWatchlist, removeWalletFromUserWatchlist, removeWalletFromWhitelist, getAllWallets, addSignal, registerMember, isDuplicateSignal, doesMemberExist, getAllMembers, getMember, getKey, redeemKey, getAllMembersWithSubscription, addKey}

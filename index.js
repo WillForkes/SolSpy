@@ -1,34 +1,33 @@
 
 const web3 = require('@solana/web3.js');
 const { checkWallet } = require('./solana/transactionDecoder');
-const { addKey, addWalletToWhitelist, getAllWallets } = require('./database/databaseInterface');
+const { addKey, getAllUserWatchlistWallets, getAllWallets } = require('./database/databaseInterface');
 const { startBot } = require("./telegram/bot");
-const { loadNewKeys, loadNewWallets } = require("./load_new_data");
+const { loadNewKeys } = require("./load_new_data");
 const { startTrackingPrices } = require('./statistics/getStats');
 
-const prompt = require('prompt');
 const cron = require('node-cron');
+require('dotenv').config();
 
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function main() {    
-    console.log("Loading new keys/wallets...")
-    const newWallets = await loadNewWallets();
+    console.log("Loading new keys...")
     const newKeys = await loadNewKeys();
 
-    for(wallet of newWallets) {
-        await addWalletToWhitelist(wallet, []);
-    }
     for(key of newKeys) {
         await addKey(key.key, key.days);
     }
-
-    console.log("New data loaded.")
     
     const connection = new web3.Connection(web3.clusterApiUrl('mainnet-beta'), 'confirmed');
-    const wallets = await getAllWallets();
+    let wallets = await getAllWallets();
+
+    const userWatchlistWallets = await getAllUserWatchlistWallets();
+    console.log('Adding watchlist wallets:', userWatchlistWallets.length);
+    wallets.push(...userWatchlistWallets);
+
     const version = await connection.getVersion();
     console.log('Cluster version:', version);
     
@@ -68,14 +67,17 @@ async function main() {
     }
 }
 
-cron.schedule('*/5 * * * *', () => {
-    console.log('Running stat tracker...');
-    startTrackingPrices().then(() => {
-        console.log('Statistics run completed. CSV file updated.');
-    }).catch(error => {
-        console.error('Error gathering statistics:', error);
+if(process.env.NODE_ENV !== 'development') {
+    cron.schedule('*/5 * * * *', () => {
+        console.log('Running stat tracker...');
+        startTrackingPrices().then(() => {
+            console.log('Statistics run completed. CSV file updated.');
+        }).catch(error => {
+            console.error('Error gathering statistics:', error);
+        });
     });
-});
+}
+
 
 main().catch(err => {
     console.error('Unhandled error:', err);

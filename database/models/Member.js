@@ -8,15 +8,10 @@ const MemberSchema = new mongoose.Schema({
     },
     isSubscribed: Boolean,
     subscriptionEndDate: Date,
-    subscriptionType: String, // 2-3 tiers?
-    purchases: [
-        {
-            time: Date,
-            transactionId: String,
-            coin: String,
-            amount: Number
-        }
-    ]
+    subscriptionType: String, // Pro, Elite
+    watching: [{
+        walletAddress: String,
+    }]
 });
 
 module.exports = mongoose.model('Member', MemberSchema);
