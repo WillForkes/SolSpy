@@ -44,10 +44,11 @@ async function sendSignal(signal) {
 Token Info:
 • ❓ _${signal.tokenInfo.symbol}_ | _${signal.tokenInfo.name}_
 • 📄 *CA*: \`${signal.tokenInfo.contractAddress}\`
-• 📈 *Market Cap*: ${signal.tokenInfo.marketCap == 0 ? '?' : "$" + formatNumber(signal.tokenInfo.marketCap)}${signal.tokenInfo.marketCap < 1000000 ? ' (Low Market Cap)' : ''}
+• 📈 *Market Cap*: ${signal.tokenInfo.marketCap == 0 ? '?' : "$" + formatNumber(signal.tokenInfo.marketCap)} ${signal.tokenInfo.marketCap < 1000000 ? '(Low Market Cap)' : ''}
 • 💧 *Liquidity*: ${signal.tokenInfo.liquidity == 0 ? '?' : "$" + formatNumber(signal.tokenInfo.liquidity)}
 • ⏰ *24h Volume*: ${signal.tokenInfo.dayVolume == 0 ? '?' : "$" + formatNumber(signal.tokenInfo.dayVolume)}
 • 💸 *Invested*: ${signal.tokenInfo.price == 0 ? parseInt(signal.amountPurchased).toString() + " Tokens" : "$" + (signal.amountPurchased * signal.tokenInfo.price).toFixed(2)}
+${signal.tokenInfo.marketCap < 200000 ? '🚨 New token - High risk 🚨' : ''}
 
 Sentiment:
 • 1h - ${sentimentEmoji1h} ${signal.tokenInfo.sentiment.h1}
