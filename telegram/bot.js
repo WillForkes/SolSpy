@@ -59,7 +59,7 @@ Links:
 • 🔗 [SolScan](https://solscan.io/account/${signal.tokenInfo.contractAddress})
 
 Risks Analysis:
-• 🔎 *Total Score*: ${signal.tokenInfo.analysis.score > 900 ? '🔴' : signal.tokenInfo.analysis.score > 500 ? '🟡' : '🟢'} ${signal.tokenInfo.analysis.score}
+• 🔎 *Total Score*: ${signal.tokenInfo.analysis.score >= 900 ? '🔴' : signal.tokenInfo.analysis.score > 500 ? '🟡' : '🟢'} ${signal.tokenInfo.analysis.score} / 1000
 • 🔎 *Risks*: ${signal.tokenInfo.analysis.risks.length > 0 
     ? signal.tokenInfo.analysis.risks.map(risk => 
         `\n      ∟ ${risk.level === 'danger' ? '🔴' : risk.level === 'warn' ? '🟡' : '🟢'} ${risk.name}: ${risk.description} (Score: ${risk.score})`).join('')
