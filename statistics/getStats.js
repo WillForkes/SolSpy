@@ -25,7 +25,7 @@ async function startTrackingPrices() {
         if(!entry) {
             shouldLog = (currPrice > signal.tokenInfo.price && signal.tokenInfo.price != 0);
         } else {
-            shouldLog = (currPrice > entry.highestPrice);
+            shouldLog = (currPrice > parseFloat(entry.highestPrice) && parseFloat(entry.initialPrice) != 0);
         }
 
         if(shouldLog) {

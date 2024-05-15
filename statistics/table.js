@@ -21,6 +21,10 @@ class DataTable {
         const existingEntry = this.data.find(e => e.mint === entry.mint);
         if (existingEntry) {
             // Update existing entry
+            entry.initialPrice = existingEntry.initialPrice
+            entry.initialLiquidity = existingEntry.initialLiquidity
+            entry.initialMC = existingEntry.initialMC
+
             Object.assign(existingEntry, entry);
         } else {
             // Add new entry
@@ -38,7 +42,9 @@ class DataTable {
     loadFromCSV() {
         const csvContent = fs.readFileSync(this.filename, 'utf-8');
         const { data } = Papa.parse(csvContent, { header: true });
-        this.data = data;
+
+        // Remove all data with an initial price of 0
+        this.data = data.filter(entry => entry.initialPrice !== '0');
     }
 }
 

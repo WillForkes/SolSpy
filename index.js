@@ -57,6 +57,7 @@ async function main() {
                 if (queue.length === 1) {
                     processQueue();
                 }
+
             }, 'confirmed');
 
             console.log(`[${wa}] Subscription ID: ${subscriptionId}`);
