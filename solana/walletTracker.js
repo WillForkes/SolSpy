@@ -11,11 +11,26 @@ async function syncWalletAddress(walletAddress) {
             headers: { 'X-API-KEY': process.env.COINSTATS_API_KEY }
         });
 
-        await delay(5000);
+        let attempts = 0;
+        while(true) {
+            if(attempts > 8) {
+                console.log("Failed to sync wallet address. Took too long. " + walletAddress)
+                return false;
+            }
 
-        return true;
+            const response2 = await axios.get(`https://openapiv1.coinstats.app/wallet/status?address=${walletAddress}&connectionId=solana`, { 
+                headers: { 'X-API-KEY': process.env.COINSTATS_API_KEY }
+            }); 
+            const response2Data = response2.data;
+
+            if(response2Data.status == "synced") {
+                return true;
+            }
+            attempts++;
+            await delay(5000);
+        }
     } catch (error) {
-        console.error(`Error syncing wallet address (${walletAddress}):`, error);
+        console.error('Error syncing wallet address:', error);
         return false;
     }
 }
