@@ -69,7 +69,7 @@ async function getTokenInfo(mint) {
 
     switch(marketCap) {
         case marketCap > 100000 && marketCap < 1000000: // 100k - 1m
-            if(liqToMCRatio < 0.1) {
+            if(liqToMCRatio < 0.12) {
                 return;
             }
             break;

@@ -5,6 +5,7 @@ const axios = require('axios');
 const { getTokenInfo } = require('./tokenData')
 const { addSignal, addPurchaseToWallet, isDuplicateSignal } = require('../database/databaseInterface')
 const { sendSignal } = require('../telegram/bot');
+const { syncWalletAddress, getRecentTrades } = require('./walletTracker');
 var SPL_TOKEN_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 require('dotenv').config();
 
@@ -62,24 +63,24 @@ async function checkWallet(walletAddress) {
     const signal = await detectTokenTransfers(transaction, pubkey.toBase58())
     if(signal) {
         const isDup = await isDuplicateSignal(signal.tokenInfo.symbol)
+
         if(!isDup) {
+            // Sync recent trades for wallet (few seconds)
+            const synced = await syncWalletAddress(walletAddress)
+
+            // If synced, get recent trades
+            let trades = [];
+            if(synced) {
+                trades = await getRecentTrades(walletAddress)
+            } else {
+                console.log("Failed to sync wallet address. " + walletAddress)
+            }
+
             // Log signal to DB
             await addSignal(signal)
 
             // Send signal out on Telegram
-            await sendSignal(signal);
-
-            // Log wallet purchase
-            // const purchase = {
-            //     symbol: signal.tokenInfo.symbol,
-            //     name: signal.tokenInfo.name,
-            //     time: signal.time,
-            //     priceAtPurchase: signal.tokenInfo.price,
-            //     highestPrice: signal.tokenInfo.price
-            // }
-            // await addPurchaseToWallet(walletAddress, purchase)
-            
-            
+            await sendSignal(signal, trades);            
         } else {
             console.log("Duplicate signal detected!")
         }

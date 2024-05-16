@@ -90,12 +90,13 @@ removeWalletScene.on('text', async (ctx) => {
 
 
 // ! FUNCTIONS
-async function sendSignal(signal) {
+async function sendSignal(signal, recentTrades) {
     const users = await getAllMembersWithSubscription("Pro");
 
     const sentimentEmoji1h = signal.tokenInfo.sentiment.h1.toLowerCase().includes('neutral') ? '❓' : signal.tokenInfo.sentiment.h1.toLowerCase().includes('bullish') ? '🚀' : '🐻';
     const sentimentEmoji24h = signal.tokenInfo.sentiment.h24.toLowerCase().includes('neutral') ? '❓' : signal.tokenInfo.sentiment.h24.toLowerCase().includes('bullish') ? '🚀' : '🐻';
     
+    let walletAnalysisMsg = `${recentTrades.length > 0 ? recentTrades.map(trade => `\n      ∟ ${trade.profitPercent <= 0 ? '🔴 ' : '🟢 +'}${trade.profitPercent}% | +$${trade.profitAmount} | ${trade.symbol}`).join('') : "\n      ∟ Failed to load recent trades."}`;
     let signalMsg = `💎 *Wallet Buy Alert* 💎
 
 Token Info:
@@ -124,7 +125,7 @@ Risks Analysis:
     : "\n      ∟ No significant risks identified."}
 
 *Wallet Analysis*:
-• Coming soon...
+• 📈 Last 4 trades: ${walletAnalysisMsg}
 
 _DO YOUR RESEARCH BEFORE INVESTING_!
     `;
