@@ -72,10 +72,7 @@ async function checkWallet(walletAddress) {
             let trades = [];
             if(synced) {
                 trades = await getRecentTrades(walletAddress)
-            } else {
-                console.log("Failed to sync wallet address. " + walletAddress)
             }
-
             // Log signal to DB
             await addSignal(signal)
 
