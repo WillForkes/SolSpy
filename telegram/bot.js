@@ -107,6 +107,7 @@ Token Info:
 • ⏰ *24h Volume*: ${signal.tokenInfo.dayVolume == 0 ? '?' : "$" + formatNumber(signal.tokenInfo.dayVolume)}
 • 💸 *Invested*: ${signal.tokenInfo.price == 0 ? parseInt(signal.amountPurchased).toString() + " Tokens" : "$" + (signal.amountPurchased * signal.tokenInfo.price).toFixed(2)}
 ${signal.tokenInfo.marketCap < 210000 ? '🚨 New token - High risk 🚨' : ''}
+
 Buying Sentiment:
 • 1h - ${sentimentEmoji1h} ${signal.tokenInfo.sentiment.h1}
 • 24h - ${sentimentEmoji24h} ${signal.tokenInfo.sentiment.h24}
