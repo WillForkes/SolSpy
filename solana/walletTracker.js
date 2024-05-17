@@ -11,7 +11,7 @@ async function syncWalletAddress(walletAddress) {
             headers: { 'X-API-KEY': process.env.COINSTATS_API_KEY }
         });
     } catch (error) {
-        console.error('Error syncing wallet. Status code:', error.response.status, 'Error', error.response.data);
+        console.error('Error syncing wallet. Status code:', error.response.status);
         return false;
     }
 }
