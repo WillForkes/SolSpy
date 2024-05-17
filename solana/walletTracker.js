@@ -11,7 +11,7 @@ async function syncWalletAddress(walletAddress) {
             headers: { 'X-API-KEY': process.env.COINSTATS_API_KEY }
         });
     } catch (error) {
-        console.error('Error syncing wallet address:', error);
+        console.error('Error syncing wallet. Status code:', error.response.status, 'Error', error.response.data);
         return false;
     }
 }
@@ -75,7 +75,7 @@ async function getRecentTrades(walletAddress) {
         }
 
     } catch (error) {
-        console.error('Error getting wallet address:', error);
+        console.error('Error getting wallet trades:', error);
         return [];
     }
 

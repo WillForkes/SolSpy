@@ -77,7 +77,7 @@ async function main() {
 
 }
 
-if(process.env.NODE_ENV !== 'development1') {
+if(process.env.NODE_ENV !== 'development') {
     cron.schedule('*/5 * * * *', () => {
         console.log('Running stat tracker...');
         startTrackingPrices().then(() => {
