@@ -65,14 +65,9 @@ async function checkWallet(walletAddress) {
         const isDup = await isDuplicateSignal(signal.tokenInfo.symbol)
 
         if(!isDup) {
-            // Sync recent trades for wallet (few seconds)
-            const synced = await syncWalletAddress(walletAddress)
-
             // If synced, get recent trades
-            let trades = [];
-            if(synced) {
-                trades = await getRecentTrades(walletAddress)
-            }
+            const trades = await getRecentTrades(walletAddress)
+
             // Log signal to DB
             await addSignal(signal)
 

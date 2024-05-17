@@ -36,6 +36,18 @@ class DataTable {
         // Clear file before writing
         fs.writeFileSync(this.filename, '');
 
+        // For each entry, check if initialPrice is 0, if it is then remove it
+        this.data = this.data.filter(entry => entry.initialPrice !== '0');
+
+        // Check for duplicates by the mint address, keep the one with the highest .highestPrice
+        const mintMap = new Map();
+        this.data.forEach(entry => {
+            if (!mintMap.has(entry.mint) || mintMap.get(entry.mint).highestPrice < entry.highestPrice) {
+                mintMap.set(entry.mint, entry);
+            }
+        });
+        this.data = Array.from(mintMap.values());
+        
         // Write data to CSV
         const header = Object.keys(this.data[0]).join(',');
         const rows = this.data.map(entry => Object.values(entry).join(',')).join('\n');

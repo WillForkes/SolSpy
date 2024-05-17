@@ -5,6 +5,7 @@ const { addKey, getAllUserWatchlistWallets, getAllWallets } = require('./databas
 const { startBot } = require("./telegram/bot");
 const { loadNewKeys } = require("./load_new_data");
 const { startTrackingPrices } = require('./statistics/getStats');
+const { syncWalletAddress } = require('./solana/walletTracker');
 
 const cron = require('node-cron');
 require('dotenv').config();
@@ -23,7 +24,6 @@ async function main() {
     
     const connection = new web3.Connection(web3.clusterApiUrl('mainnet-beta'), 'confirmed');
     let wallets = await getAllWallets();
-
     const userWatchlistWallets = await getAllUserWatchlistWallets();
     console.log('Adding watchlist wallets:', userWatchlistWallets.length);
     wallets.push(...userWatchlistWallets);
@@ -66,9 +66,18 @@ async function main() {
             console.error('Error:', error);
         }
     }
+
+    console.log("Syncing wallet addresses...")
+    for(wallet of wallets) {
+        syncWalletAddress(wallet.walletAddress);
+        console.log("Syncing wallet addresses: ", wallet.walletAddress)
+        await delay(2000);
+    }
+    console.log("Finished syncing wallet addresses!")
+
 }
 
-if(process.env.NODE_ENV !== 'development') {
+if(process.env.NODE_ENV !== 'development1') {
     cron.schedule('*/5 * * * *', () => {
         console.log('Running stat tracker...');
         startTrackingPrices().then(() => {
@@ -78,7 +87,6 @@ if(process.env.NODE_ENV !== 'development') {
         });
     });
 }
-
 
 main().catch(err => {
     console.error('Unhandled error:', err);
