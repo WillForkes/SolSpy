@@ -67,6 +67,11 @@ async function getTokenInfo(mint) {
         return;
     }
 
+    // Check if 24h volume is less than marketcap * 0.8
+    if (dayVolume < (marketCap * 0.8)) {
+        return;
+    }
+
     switch(marketCap) {
         case marketCap > 100000 && marketCap < 1000000: // 100k - 1m
             if(liqToMCRatio < 0.12) {
