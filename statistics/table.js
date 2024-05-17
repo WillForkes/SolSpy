@@ -33,6 +33,10 @@ class DataTable {
     }
 
     exportToCSV() {
+        // Clear file before writing
+        fs.writeFileSync(this.filename, '');
+
+        // Write data to CSV
         const header = Object.keys(this.data[0]).join(',');
         const rows = this.data.map(entry => Object.values(entry).join(',')).join('\n');
         const csvData = `${header}\n${rows}`;
