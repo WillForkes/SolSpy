@@ -11,10 +11,12 @@ async function startTrackingPrices() {
     for(let i=0; i<signals.length; i++) {
         let signal = signals[i];
 
-        const tendaysago = Math.floor(Date.now() / 1000) - (10 * 24 * 3600);
-        if(signal.time <= tendaysago) {
+        const twentyDays = Math.floor(Date.now() / 1000) - (20 * 24 * 3600);
+        if(signal.time <= twentyDays) {
             continue;
         }
+
+        if(signal.tokenInfo.price == 0) { continue }
 
         const currPrice = await getPrice(signal.tokenInfo.contractAddress);
         if(!currPrice) {continue}
