@@ -257,7 +257,7 @@ Welcome back *${ctx.from.username}*! We are the #1 Solana wallet spy bot on tele
 
 *Signals will be sent to you automatically*
 
-🔗 [Our website](https://solspy.sellpass.io)
+🔗 [Our website](https://solspy.billgang.store/)
 
 💎 Your subscription: ${member.subscriptionType}
 ⏰ Ends on: ${member.subscriptionEndDate.toString()}`;
@@ -267,7 +267,7 @@ Welcome back *${ctx.from.username}*! We are the #1 Solana wallet spy bot on tele
                 disable_web_page_preview: true,
                 reply_markup: {
                     inline_keyboard: [
-                        [{ text: 'Extend subscription', url: 'https://solspy.sellpass.io/products' }],
+                        [{ text: 'Extend subscription', url: 'https://solspy.billgang.store/' }],
                         [{ text: 'Redeem Key', callback_data: 'redeem' }]                        
                     ]
                 }
@@ -277,7 +277,7 @@ Welcome back *${ctx.from.username}*! We are the #1 Solana wallet spy bot on tele
 
 Welcome to Sol Spy _${ctx.from.username}_! We are the #1 Solana wallet spy bot on telegram. This bot provides buy signals from profitable wallets as they happen in real time whilst offering a range of tools to help you make a profit.
 
-🔗 [Our website](https://solspy.sellpass.io)
+🔗 [Our website](https://solspy.billgang.store/)
 
 Our current pricing packages:
 ∟ *$30* - 1 week
@@ -292,7 +292,7 @@ _To get access to the bot, please select an option below._
             disable_web_page_preview: true,
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: 'Buy Subscription', url: 'https://solspy.sellpass.io/products' }],
+                    [{ text: 'Buy Subscription', url: 'https://solspy.billgang.store/' }],
                     [{ text: 'Redeem Key', callback_data: 'redeem' }]
                     
                 ]
