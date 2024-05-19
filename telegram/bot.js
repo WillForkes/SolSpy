@@ -275,7 +275,7 @@ Welcome back *${ctx.from.username}*! We are the #1 Solana wallet spy bot on tele
         } else {
             const startMenuText = `👁️ *Sol Spy* 👁️
 
-Welcome to Sol Spy _${ctx.from.username}_! We are the #1 Solana wallet spy bot on telegram. This bot provides buy signals from profitable wallets as they happen in real time whilst offering a range of tools to help you make a profit.
+Welcome to Sol Spy! We are the #1 Solana wallet spy bot on telegram. This bot provides buy signals from profitable wallets as they happen in real time whilst offering a range of tools to help you make a profit.
 
 🔗 [Our website](https://solspy.billgang.store/)
 
