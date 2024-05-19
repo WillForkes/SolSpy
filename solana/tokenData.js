@@ -68,7 +68,7 @@ async function getTokenInfo(mint) {
     }
 
     // Check if 24h volume is less than marketcap * 0.8
-    if (dayVolume < (marketCap * 0.8) && !launchedInLast2h) {
+    if (dayVolume < (marketCap * 0.7) && !launchedInLast2h) {
         return;
     }
 
