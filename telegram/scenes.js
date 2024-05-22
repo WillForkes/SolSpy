@@ -1,6 +1,7 @@
 const { Scenes } = require('telegraf');
 const { getKey, redeemKey, addWalletToUserWatchlist, removeWalletFromUserWatchlist, getAllMembersWithSubscription } = require("../database/databaseInterface");
 const { isValidSolanaAddress } = require("./util");
+const { bot } = require('./bot');
 
 const redeemScene = new Scenes.BaseScene('redeemScene');
 const addWalletScene = new Scenes.BaseScene('addWalletScene');
@@ -104,7 +105,7 @@ broadcastScene.on('text', async (ctx) => {
                 }
             );
         } catch(error) {
-            console.error("Failed sending message to telegram user: " + user.telegramId + " - " + error);
+            console.error("Failed broadcasting message to telegram user: " + user.telegramId + " - " + error);
         }
     }
 

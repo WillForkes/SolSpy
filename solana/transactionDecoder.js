@@ -1,11 +1,8 @@
 const web3 = require('@solana/web3.js');
-const bufferLayout = require('buffer-layout');
-const BN = require('bn.js');
-const axios = require('axios');
-const { getTokenInfo } = require('./tokenData')
-const { addSignal, addPurchaseToWallet, isDuplicateSignal } = require('../database/databaseInterface')
+const { getTokenInfo, getRugCheckData} = require('./tokenData')
+const { addSignal, isDuplicateSignal } = require('../database/databaseInterface')
 const { sendSignal } = require('../telegram/bot');
-const { syncWalletAddress, getRecentTrades } = require('./walletTracker');
+const { getRecentTrades } = require('./walletTracker');
 var SPL_TOKEN_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 require('dotenv').config();
 
@@ -102,10 +99,16 @@ async function detectTokenTransfers(transaction, monitoredWalletAddress) {
         // Determine whether the monitored wallet is the source or destination
         if (postBalance.owner === monitoredWalletAddress) {
             if(amountPurchased < 0) {
-                console.log("Negative amount purchased - skipping...")
+                // Sell amount percentage
+                const sellAmountPercentage = parseInt(Math.abs((amountPurchased) / preBalance.uiTokenAmount.uiAmount) * 100);
+                const tokenInfoBasic = await getRugCheckData(contractAddress);
+                const tokenInfoBasicName = tokenInfoBasic.tokenMeta.name;
+                const tokenInfoBasicSymbol = tokenInfoBasic.tokenMeta.symbol;
+                console.log(`[SELL] ${tokenInfoBasicName} (${tokenInfoBasicSymbol}) | Sold ${sellAmountPercentage}% | ${monitoredWalletAddress} | ${Date.now.toLocaleString()}`);
+
                 return;
             }
-            
+
             const tokenInfo = await getTokenInfo(contractAddress);
             if(!tokenInfo){
                 continue

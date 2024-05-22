@@ -3,7 +3,7 @@ const { getAllMembersWithSubscription } = require("../database/databaseInterface
 const { redeemScene, addWalletScene, removeWalletScene, broadcastScene } = require("./scenes");
 const {registerCommands} = require("./commands");
 const {registerCallbacks} = require("./callbacks");
-const {formatNumber} = require("./util");
+const {formatNumber } = require("./util");
 
 require("dotenv").config();
 
@@ -101,7 +101,6 @@ _DO YOUR RESEARCH BEFORE INVESTING_!
                         reply_markup: {
                             inline_keyboard: [
                                 [{ text: 'BonkBot', url: 'https://t.me/bonkbot_bot' }, { text: 'Trojan Bot', url: 'https://t.me/solana_trojanbot' }],
-                                [{ text: '💰 Get sell alert 💰', callback_data: `getSellAlert:${userTelegramId}:${signal.tokenInfo.symbol}:${signal.walletAddress}`}]
                             ]
                         }
                     }
@@ -112,6 +111,10 @@ _DO YOUR RESEARCH BEFORE INVESTING_!
             }
         }
     }
+}
+
+async function sendSellAlerts() {
+
 }
 
 
@@ -135,4 +138,4 @@ process.once("SIGINT", () => bot.stop("SIGINT"))
 process.once("SIGTERM", () => bot.stop("SIGTERM"))
 
 
-module.exports = { sendSignal };
+module.exports = { sendSignal, bot };
