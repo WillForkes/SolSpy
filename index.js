@@ -2,7 +2,6 @@
 const web3 = require('@solana/web3.js');
 const { checkWallet } = require('./solana/transactionDecoder');
 const { addKey, getAllUserWatchlistWallets, getAllWallets } = require('./database/databaseInterface');
-const { startBot } = require("./telegram/bot");
 const { loadNewKeys } = require("./load_new_data");
 const { startTrackingPrices } = require('./statistics/getStats');
 const { syncWalletAddress } = require('./solana/walletTracker');
@@ -30,9 +29,6 @@ async function main() {
 
     const version = await connection.getVersion();
     console.log('Cluster version:', version);
-    
-    //telegram
-    startBot();
 
     // queue
     const queue = [];

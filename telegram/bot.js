@@ -1,121 +1,12 @@
 const { Telegraf, Markup, Scenes, session } = require('telegraf');
-const { message } = require("telegraf/filters");
-const { doesMemberExist, registerMember, getAllMembersWithSubscription, getMember, getKey, redeemKey, addWalletToUserWatchlist, removeWalletFromUserWatchlist } = require("../database/databaseInterface");
+const { getAllMembersWithSubscription } = require("../database/databaseInterface");
+const { redeemScene, addWalletScene, removeWalletScene, broadcastScene } = require("./scenes");
+const registerCommands = require("./commands");
+
 require("dotenv").config();
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
-
 const stage = new Scenes.Stage();
-const redeemScene = new Scenes.BaseScene('redeemScene');
-const addWalletScene = new Scenes.BaseScene('addWalletScene');
-const removeWalletScene = new Scenes.BaseScene('removeWalletScene');
-const broadcastScene = new Scenes.BaseScene('broadcastScene');
-
-// ! REDEEM KEY SCENE
-redeemScene.enter((ctx) => ctx.reply('Please reply to this message with your redeem key.'));
-redeemScene.on('text', async (ctx) => {
-    const inputtedKey = ctx.message.text;
-    const foundKey = await getKey(inputtedKey);
-    const telegramId = ctx.from.id.toString();
-
-    if(foundKey) {
-        const successRedeem = await redeemKey(telegramId, inputtedKey);
-        if(successRedeem) {
-            ctx.reply(`🎉 Successfully activated redeem key. ${foundKey.days} Days have been added onto your subscription!`);
-        } else {
-            ctx.reply(`An error occured whilst redeeming key. Please contract admin.`);
-        }
-    } else {
-        ctx.reply(`That key is not valid!`);
-    }
-    
-    // Here, add your logic to process the redeem key.
-    ctx.scene.leave();
-});
-
-// ! ADD WALLET SCENE
-addWalletScene.enter((ctx) => ctx.reply(`Please reply to this message with the Solana wallet you want to start tracking.
-
-Please note, wallets that have extremely high transaction volumes (such as bots, exchanges, snipers, etc) *will be removed*.
-
-_You can only track up to 3 wallets at a time._
-`, { parse_mode: 'Markdown' }));
-addWalletScene.on('text', async (ctx) => {
-    const inputtedWallet = ctx.message.text;
-
-    // Validate if the wallet is a valid solana wallet address
-    if(!isValidSolanaAddress(inputtedWallet)){
-        ctx.reply('Invalid Solana wallet address. Please try again.');
-        ctx.scene.leave();
-        return;
-    } 
-
-    const telegramId = ctx.from.id.toString();
-
-    const successAdd = await addWalletToUserWatchlist(telegramId, inputtedWallet);
-    if(successAdd === true) {
-        ctx.reply(`👀️️️️️️ Successfully started watching wallet: ${inputtedWallet}!`);
-        ctx.scene.leave();
-    } else {
-        ctx.reply(successAdd);
-        ctx.scene.leave();
-        return;
-    }
-});
-
-// ! REMOVE WALLET SCENE
-removeWalletScene.enter((ctx) => ctx.reply('Please reply to this message with the Solana wallet you want to stop tracking.'));
-removeWalletScene.on('text', async (ctx) => {
-    const inputtedWallet = ctx.message.text;
-
-    // Validate if the wallet is a valid solana wallet address
-    if(!isValidSolanaAddress(inputtedWallet)){
-        ctx.reply('Invalid Solana wallet address. Please try again.');
-        ctx.scene.leave();
-        return;
-    } 
-
-    const telegramId = ctx.from.id.toString();
-
-    const successRemove = await removeWalletFromUserWatchlist(telegramId, inputtedWallet);
-    if(successRemove === true) {
-        ctx.reply(`🗑️ Successfully removed wallet from watchlist: ${inputtedWallet}!`);
-        ctx.scene.leave();
-    } else {
-        ctx.reply(successRemove);
-        ctx.scene.leave();
-        return;
-    }
-});
-
-broadcastScene.enter((ctx) => ctx.reply('Please reply to this message with the message you want to broadcast to all paying users.'));
-broadcastScene.on('text', async (ctx) => {
-    const broadcastMessageHeader = `📢 *Subscriber Broadcast* 📢`;
-    let broadcastMessage = ctx.message.text;
-    broadcastMessage = broadcastMessageHeader + "\n\n" + broadcastMessage;
-
-    // Send message to all telegram users (apart from user who issued command)
-    const users = await getAllMembersWithSubscription("Pro");
-
-    for (const user of users) {
-        try {
-            await bot.telegram.sendMessage(
-                user.telegramId,
-                broadcastMessage,
-                { 
-                    parse_mode: 'Markdown', 
-                    disable_web_page_preview: true,
-                }
-            );
-        } catch(error) {
-            console.error("Failed sending message to telegram user: " + user.telegramId + " - " + error);
-        }
-    }
-
-    ctx.reply("Successfully broadcasted message.");
-    ctx.scene.leave();
-    return;
-});
 
 
 // ! FUNCTIONS
@@ -207,7 +98,8 @@ _DO YOUR RESEARCH BEFORE INVESTING_!
                         disable_web_page_preview: true,
                         reply_markup: {
                             inline_keyboard: [
-                                [{ text: 'BonkBot', url: 'https://t.me/bonkbot_bot' }, { text: 'Trojan Bot', url: 'https://t.me/solana_trojanbot' }]
+                                [{ text: 'BonkBot', url: 'https://t.me/bonkbot_bot' }, { text: 'Trojan Bot', url: 'https://t.me/solana_trojanbot' }],
+                                [{ text: '💰 Get sell alert 💰', callback_data: 'sellAlert'}]
                             ]
                         }
                     }
@@ -220,33 +112,6 @@ _DO YOUR RESEARCH BEFORE INVESTING_!
     }
 }
 
-function startBot() {
-    bot.launch();
-    console.log("[TELEGRAM] Bot is running");
-}
-
-function formatNumber(num) {
-    if (num >= 1000000000) {
-        return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'b';
-    }
-    if (num >= 1000000) {
-        return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'm';
-    }
-    if (num >= 1000) {
-        return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-    }
-    return num;
-}
-
-function isValidSolanaAddress(address) {
-    // Regular expression to match a Solana wallet address
-    const solanaAddressRegex = /^([1-9A-HJ-NP-Za-km-z]{32,44})$/;
-
-    // Check if the address matches the regex pattern
-    return solanaAddressRegex.test(address);
-}
-
-
 
 // ! MIDDLEWARE ////////////////
 stage.register(redeemScene);
@@ -258,144 +123,19 @@ bot.use(stage.middleware());
 
 
 // !CALLBACKS
-// bot.action('redeem', (ctx) => {
-//     ctx.scene.enter('redeemScene');
-// });
-
-// bot.action('add_wallet', (ctx) => {
-//     ctx.scene.enter('addWalletScene');
-// });
-
-// bot.action('remove_wallet', (ctx) => {
-//     ctx.scene.enter('removeWalletScene');
-// });
-
-
-
-// ! BOT COMMAND //////////
-bot.start(async (ctx) => {
-    try {
-        const telegramId = ctx.from.id.toString();
-        const isMemberExist = await doesMemberExist(telegramId);
-
-        if (!isMemberExist) {
-            await registerMember(telegramId)
-        }
-
-        const member = await getMember(telegramId);
-
-        if(member.isSubscribed) {
-            const startMenuText = `👁️ *Sol Spy* 👁️
-
-Welcome back *${ctx.from.username}*! We are the #1 Solana wallet spy bot on telegram. This bot provides buy signals from profitable wallets as they happen in real time whilst offering a range of tools to help you make a profit.
-
-*Signals will be sent to you automatically*
-
-🔗 [Our website](https://solspy.billgang.store/)
-
-💎 Your subscription: ${member.subscriptionType}
-⏰ Ends on: ${member.subscriptionEndDate.toString()}`;
-            
-            ctx.reply(startMenuText, { 
-                parse_mode: 'Markdown', 
-                disable_web_page_preview: true,
-                reply_markup: {
-                    inline_keyboard: [
-                        [{ text: 'Extend subscription', url: 'https://solspy.billgang.store/' }],
-                        [{ text: 'Redeem Key', callback_data: 'redeem' }]                        
-                    ]
-                }
-            });
-        } else {
-            const startMenuText = `👁️ *Sol Spy* 👁️
-
-Welcome to Sol Spy! We are the #1 Solana wallet spy bot on telegram. This bot provides buy signals from profitable wallets as they happen in real time whilst offering a range of tools to help you make a profit.
-
-🔗 [Our website](https://solspy.billgang.store/)
-
-Our current pricing packages:
-∟ *$30* - 1 week
-∟ *$80* - 1 month
-∟ *$200* - 3 month
-
-_To get access to the bot, please select an option below._
-            `;
-
-        ctx.reply(startMenuText, { 
-            parse_mode: 'Markdown', 
-            disable_web_page_preview: true,
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: 'Buy Subscription', url: 'https://solspy.billgang.store/' }],
-                    [{ text: 'Redeem Key', callback_data: 'redeem' }]
-                    
-                ]
-            }
-        });
-        }
-    } catch (error) {
-        console.error("[TELEGRAM] Error in start command:", error);
-        ctx.reply("An error occurred.");
-    }
+bot.action('redeem', (ctx) => {
+    ctx.scene.enter('redeemScene');
 });
 
-bot.command('redeem', (ctx) => ctx.scene.enter('redeemScene'));
+registerCommands(bot);
 
-bot.command('add_wallet', async (ctx) => {
-    const telegramId = ctx.from.id.toString();
-    const member = await getMember(telegramId);
-
-    if(member.isSubscribed) {  
-        ctx.scene.enter('addWalletScene');
-    } else {
-        ctx.reply('You need to be subscribed to use this feature. Please buy a subscription first.');
-    }
-});
-
-bot.command('remove_wallet', async (ctx) => {
-    const telegramId = ctx.from.id.toString();
-    const member = await getMember(telegramId);
-
-    if(member.isSubscribed) {
-        ctx.scene.enter('removeWalletScene');
-    } else {
-        ctx.reply('You need to be subscribed to use this feature. Please buy a subscription first.');
-    }
-});
-
-bot.command('watchlist', async (ctx) => {
-    const telegramId = ctx.from.id.toString();
-    const member = await getMember(telegramId);
-
-    if(member.isSubscribed) {
-        if(member.watching.length === 0) {
-            ctx.reply('You are not watching any wallets.');
-            return;
-        }
-        const watchingList = member.watching.map(wallet => wallet.walletAddress).join('\n');
-        ctx.reply(`👀 **Your current watchlist** 👀
-${watchingList}`, { parse_mode: 'Markdown' });
-    } else {
-        ctx.reply('You need to be subscribed to use this feature. Please buy a subscription first.');
-    }
-});
-
-bot.command('broadcast', async (ctx) => {
-    // Check if the user is an admin
-    const telegramId = ctx.from.id.toString();
-    const member = await getMember(telegramId);
-
-    if(member.subscriptionType !== "Admin") {
-        ctx.reply('You do not have permission to use this command.');
-        return;
-    }
-
-    ctx.scene.enter('broadcastScene');
-})
-
+// ! LAUNCH BOT
+bot.launch();
+console.log("[TELEGRAM] Bot is running");
 
 // ! Enable graceful stop
 process.once("SIGINT", () => bot.stop("SIGINT"))
 process.once("SIGTERM", () => bot.stop("SIGTERM"))
 
-module.exports = { sendSignal, startBot };
+
+module.exports = { sendSignal };
