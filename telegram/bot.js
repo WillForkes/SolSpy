@@ -1,7 +1,9 @@
 const { Telegraf, Markup, Scenes, session } = require('telegraf');
 const { getAllMembersWithSubscription } = require("../database/databaseInterface");
 const { redeemScene, addWalletScene, removeWalletScene, broadcastScene } = require("./scenes");
-const registerCommands = require("./commands");
+const {registerCommands} = require("./commands");
+const {registerCallbacks} = require("./callbacks");
+const {formatNumber} = require("../util");
 
 require("dotenv").config();
 
@@ -99,7 +101,7 @@ _DO YOUR RESEARCH BEFORE INVESTING_!
                         reply_markup: {
                             inline_keyboard: [
                                 [{ text: 'BonkBot', url: 'https://t.me/bonkbot_bot' }, { text: 'Trojan Bot', url: 'https://t.me/solana_trojanbot' }],
-                                [{ text: '💰 Get sell alert 💰', callback_data: 'sellAlert'}]
+                                [{ text: '💰 Get sell alert 💰', callback_data: `getSellAlert:${userTelegramId}:${signal.tokenInfo.symbol}:${signal.walletAddress}`}]
                             ]
                         }
                     }
@@ -121,12 +123,7 @@ stage.register(broadcastScene);
 bot.use(session());
 bot.use(stage.middleware());
 
-
-// !CALLBACKS
-bot.action('redeem', (ctx) => {
-    ctx.scene.enter('redeemScene');
-});
-
+registerCallbacks(bot);
 registerCommands(bot);
 
 // ! LAUNCH BOT

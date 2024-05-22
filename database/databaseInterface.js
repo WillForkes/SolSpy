@@ -188,7 +188,7 @@ async function addWalletToUserWatchlist(telegramId, walletAddress) {
             return "Wallet is already being watched by SolSpy!";
         }
 
-        const watching = member.watching;
+        let watching = member.watching;
         watching.push({walletAddress: walletAddress});
     
         await Member.updateOne({telegramId: telegramId}, {
@@ -246,4 +246,51 @@ async function getAllUserWatchlistWallets() {
     return wallets;
 }
 
-module.exports = { getAllSignals, addWalletToWhitelist, getAllUserWatchlistWallets, addWalletToUserWatchlist, removeWalletFromUserWatchlist, removeWalletFromWhitelist, getAllWallets, addSignal, registerMember, isDuplicateSignal, doesMemberExist, getAllMembers, getMember, getKey, redeemKey, getAllMembersWithSubscription, addKey}
+async function addIDtoSignalSellAlerts(wallet, symbol, userID) {
+    try {
+        // Find signal with wallet address and symbol
+        let signal = await Signal.findOne({ walletAddress: wallet, 'tokenInfo.symbol': symbol });
+        if (!signal) {
+            return false;
+        }
+
+        // Initialize sellAlerts array if it doesn't exist
+        if (!Array.isArray(signal.sellAlerts)) {
+            signal.sellAlerts = [];
+        }
+
+        // Check if userID is already in sellAlerts array to avoid duplicates
+        if (!signal.sellAlerts.includes(userID)) {
+            // Add user ID to signal's sellAlerts array
+            signal.sellAlerts.push(userID);
+            await signal.save();
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error adding userID to sellAlerts:', error);
+        return false;
+    }
+}
+
+
+module.exports = {
+    getAllSignals,
+    addWalletToWhitelist,
+    getAllUserWatchlistWallets,
+    addWalletToUserWatchlist,
+    removeWalletFromUserWatchlist,
+    removeWalletFromWhitelist,
+    getAllWallets,
+    addSignal,
+    registerMember,
+    isDuplicateSignal,
+    doesMemberExist,
+    getAllMembers,
+    getMember,
+    getKey,
+    redeemKey,
+    getAllMembersWithSubscription,
+    addKey,
+    addIDtoSignalSellAlerts
+};

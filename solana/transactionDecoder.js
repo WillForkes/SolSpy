@@ -100,7 +100,12 @@ async function detectTokenTransfers(transaction, monitoredWalletAddress) {
         const amountPurchased = postBalance.uiTokenAmount.uiAmount - preBalance.uiTokenAmount.uiAmount;
 
         // Determine whether the monitored wallet is the source or destination
-        if (postBalance.owner === monitoredWalletAddress && amountPurchased > 0) {
+        if (postBalance.owner === monitoredWalletAddress) {
+            if(amountPurchased < 0) {
+                console.log("Negative amount purchased - skipping...")
+                return;
+            }
+            
             const tokenInfo = await getTokenInfo(contractAddress);
             if(!tokenInfo){
                 continue

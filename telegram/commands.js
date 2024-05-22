@@ -127,4 +127,4 @@ ${watchingList}`, { parse_mode: 'Markdown' });
     
 }
 
-module.exports = registerCommands;
+module.exports = { registerCommands };
