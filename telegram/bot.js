@@ -3,7 +3,7 @@ const { getAllMembersWithSubscription } = require("../database/databaseInterface
 const { redeemScene, addWalletScene, removeWalletScene, broadcastScene } = require("./scenes");
 const {registerCommands} = require("./commands");
 const {registerCallbacks} = require("./callbacks");
-const {formatNumber} = require("../util");
+const {formatNumber} = require("./util");
 
 require("dotenv").config();
 
