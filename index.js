@@ -67,14 +67,15 @@ async function main() {
         }
     }
 
-    console.log("Syncing wallet addresses...")
-    for(wallet of wallets) {
-        syncWalletAddress(wallet.walletAddress);
-        console.log("Syncing wallet addresses: ", wallet.walletAddress)
-        await delay(2000);
+    if(process.env.NODE_ENV !== 'development') {
+        console.log("Syncing wallet addresses...")
+        for(wallet of wallets) {
+            syncWalletAddress(wallet.walletAddress);
+            console.log("Syncing wallet addresses: ", wallet.walletAddress)
+            await delay(2000);
+        }
+        console.log("Finished syncing wallet addresses!")
     }
-    console.log("Finished syncing wallet addresses!")
-
 }
 
 if(process.env.NODE_ENV !== 'development') {

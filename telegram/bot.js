@@ -9,6 +9,7 @@ const stage = new Scenes.Stage();
 const redeemScene = new Scenes.BaseScene('redeemScene');
 const addWalletScene = new Scenes.BaseScene('addWalletScene');
 const removeWalletScene = new Scenes.BaseScene('removeWalletScene');
+const broadcastScene = new Scenes.BaseScene('broadcastScene');
 
 // ! REDEEM KEY SCENE
 redeemScene.enter((ctx) => ctx.reply('Please reply to this message with your redeem key.'));
@@ -87,11 +88,42 @@ removeWalletScene.on('text', async (ctx) => {
     }
 });
 
+broadcastScene.enter((ctx) => ctx.reply('Please reply to this message with the message you want to broadcast to all paying users.'));
+broadcastScene.on('text', async (ctx) => {
+    const broadcastMessageHeader = `📢 *Subscriber Broadcast* 📢`;
+    let broadcastMessage = ctx.message.text;
+    broadcastMessage = broadcastMessageHeader + "\n\n" + broadcastMessage;
+
+    // Send message to all telegram users (apart from user who issued command)
+    const users = await getAllMembersWithSubscription("Pro");
+
+    for (const user of users) {
+        try {
+            await bot.telegram.sendMessage(
+                user.telegramId,
+                broadcastMessage,
+                { 
+                    parse_mode: 'Markdown', 
+                    disable_web_page_preview: true,
+                }
+            );
+        } catch(error) {
+            console.error("Failed sending message to telegram user: " + user.telegramId + " - " + error);
+        }
+    }
+
+    ctx.reply("Successfully broadcasted message.");
+    ctx.scene.leave();
+    return;
+});
 
 
 // ! FUNCTIONS
 async function sendSignal(signal, recentTrades) {
     const users = await getAllMembersWithSubscription("Pro");
+    const users_admins = await getAllMembersWithSubscription("Admin");
+    
+    users.push(...users_admins);
 
     const sentimentEmoji1h = signal.tokenInfo.sentiment.h1.toLowerCase().includes('neutral') ? '❓' : signal.tokenInfo.sentiment.h1.toLowerCase().includes('bullish') ? '🚀' : '🐻';
     const sentimentEmoji24h = signal.tokenInfo.sentiment.h24.toLowerCase().includes('neutral') ? '❓' : signal.tokenInfo.sentiment.h24.toLowerCase().includes('bullish') ? '🚀' : '🐻';
@@ -220,22 +252,24 @@ function isValidSolanaAddress(address) {
 stage.register(redeemScene);
 stage.register(addWalletScene);
 stage.register(removeWalletScene);
+stage.register(broadcastScene);
 bot.use(session());
 bot.use(stage.middleware());
 
 
 // !CALLBACKS
-bot.action('redeem', (ctx) => {
-    ctx.scene.enter('redeemScene');
-});
+// bot.action('redeem', (ctx) => {
+//     ctx.scene.enter('redeemScene');
+// });
 
-bot.action('add_wallet', (ctx) => {
-    ctx.scene.enter('addWalletScene');
-});
+// bot.action('add_wallet', (ctx) => {
+//     ctx.scene.enter('addWalletScene');
+// });
 
-bot.action('remove_wallet', (ctx) => {
-    ctx.scene.enter('removeWalletScene');
-});
+// bot.action('remove_wallet', (ctx) => {
+//     ctx.scene.enter('removeWalletScene');
+// });
+
 
 
 // ! BOT COMMAND //////////
@@ -305,7 +339,6 @@ _To get access to the bot, please select an option below._
     }
 });
 
-
 bot.command('redeem', (ctx) => ctx.scene.enter('redeemScene'));
 
 bot.command('add_wallet', async (ctx) => {
@@ -346,6 +379,20 @@ ${watchingList}`, { parse_mode: 'Markdown' });
         ctx.reply('You need to be subscribed to use this feature. Please buy a subscription first.');
     }
 });
+
+bot.command('broadcast', async (ctx) => {
+    // Check if the user is an admin
+    const telegramId = ctx.from.id.toString();
+    const member = await getMember(telegramId);
+
+    if(member.subscriptionType !== "Admin") {
+        ctx.reply('You do not have permission to use this command.');
+        return;
+    }
+
+    ctx.scene.enter('broadcastScene');
+})
+
 
 // ! Enable graceful stop
 process.once("SIGINT", () => bot.stop("SIGINT"))
