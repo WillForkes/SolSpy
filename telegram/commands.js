@@ -1,6 +1,6 @@
 
 const { Telegraf, session } = require('telegraf');
-const { doesMemberExist, registerMember, getAllMembersWithSubscription, getMember } = require("../database/databaseInterface");
+const { doesMemberExist, registerMember, getMember } = require("../database/databaseInterface");
 
 
 // ! BOT COMMAND //////////
@@ -106,7 +106,7 @@ async function registerCommands(bot) {
             }
             const watchingList = member.watching.map(wallet => wallet.walletAddress).join('\n');
             ctx.reply(`👀 **Your current watchlist** 👀
-    ${watchingList}`, { parse_mode: 'Markdown' });
+${watchingList}`, { parse_mode: 'Markdown' });
         } else {
             ctx.reply('You need to be subscribed to use this feature. Please buy a subscription first.');
         }
