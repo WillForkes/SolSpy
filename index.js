@@ -5,32 +5,35 @@ const { addKey, getAllUserWatchlistWallets, getAllWallets } = require('./databas
 const { loadNewKeys } = require("./load_new_data");
 const { startTrackingPrices } = require('./statistics/getStats');
 const { syncWalletAddress } = require('./solana/walletTracker');
-
 const cron = require('node-cron');
 require('dotenv').config();
+const bot = require('./telegram/bot');
 
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function main() {    
-    console.log("Loading new keys...")
+async function main() {
+    // * Load new keys
     const newKeys = await loadNewKeys();
+    for(key of newKeys) { await addKey(key.key, key.days); }
+    if(newKeys.length > 0) {console.log(`Added ${newKeys.length} new keys to the database.`);}
 
-    for(key of newKeys) {
-        await addKey(key.key, key.days);
-    }
-    
+    // * Connect to cluster
     const connection = new web3.Connection(web3.clusterApiUrl('mainnet-beta'), 'confirmed');
+
+    // * Get all wallets to watch
     let wallets = await getAllWallets();
     const userWatchlistWallets = await getAllUserWatchlistWallets();
     console.log('Adding watchlist wallets:', userWatchlistWallets.length);
     wallets.push(...userWatchlistWallets);
+    
+    // * Start telegram bot
+    require('./telegram/handlers/loadHandlers');
+    bot.launch();
+    console.log('[TELEGRAM] Bot online!');
 
-    const version = await connection.getVersion();
-    console.log('Cluster version:', version);
-
-    // queue
+    // * Create queue function
     const queue = [];
     async function processQueue() {
         while (queue.length > 0) {
@@ -41,6 +44,7 @@ async function main() {
         }
     }
 
+    // * Subscribe to all wallets
     for (let i = 0; i < wallets.length; i++) {
         try {
             const wa = wallets[i].walletAddress;
@@ -55,14 +59,13 @@ async function main() {
                 }
 
             }, 'confirmed');
-
-            console.log(`[${wa}] Subscription ID: ${subscriptionId}`);
-
         } catch (error) {
             console.error('Error:', error);
         }
     }
+    console.log(`Subscribed to ${wallets.length} wallets | ${userWatchlistWallets.length} - watchlist | ${wallets.length - userWatchlistWallets.length} - normal wallets.`);
 
+    // * Sync wallet addresses (production only)
     if(process.env.NODE_ENV !== 'development') {
         console.log("Syncing wallet addresses...")
         for(wallet of wallets) {
@@ -74,6 +77,7 @@ async function main() {
     }
 }
 
+// * Run statistics tracker every 5 minutes
 if(process.env.NODE_ENV !== 'development') {
     cron.schedule('*/5 * * * *', () => {
         console.log('Running stat tracker...');

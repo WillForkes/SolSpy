@@ -157,4 +157,4 @@ function calculateSentiment(buys, sells) {
     }
 }
 
-module.exports = {getTokenInfo}
+module.exports = {getRugCheckData, getTokenInfo}

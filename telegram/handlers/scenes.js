@@ -1,12 +1,13 @@
-const { Scenes } = require('telegraf');
-const { getKey, redeemKey, addWalletToUserWatchlist, removeWalletFromUserWatchlist, getAllMembersWithSubscription } = require("../database/databaseInterface");
-const { isValidSolanaAddress } = require("./util");
-const { bot } = require('./bot');
+const bot = require('../bot');
+const { Scenes, session } = require('telegraf');
+const { getKey, redeemKey, addWalletToUserWatchlist, removeWalletFromUserWatchlist, getAllMembersWithSubscription } = require("../../database/databaseInterface");
+const { isValidSolanaAddress } = require("../util");
 
 const redeemScene = new Scenes.BaseScene('redeemScene');
 const addWalletScene = new Scenes.BaseScene('addWalletScene');
 const removeWalletScene = new Scenes.BaseScene('removeWalletScene');
 const broadcastScene = new Scenes.BaseScene('broadcastScene');
+const stage = new Scenes.Stage();
 
 // ! REDEEM KEY SCENE
 redeemScene.enter((ctx) => ctx.reply('Please reply to this message with your redeem key.'));
@@ -92,8 +93,10 @@ broadcastScene.on('text', async (ctx) => {
     broadcastMessage = broadcastMessageHeader + "\n\n" + broadcastMessage;
 
     // Send message to all telegram users (apart from user who issued command)
-    const users = await getAllMembersWithSubscription("Pro");
-
+    let users = await getAllMembersWithSubscription("Pro");
+    const admins = await getAllMembersWithSubscription("Admin");
+    users = users.concat(admins);
+    
     for (const user of users) {
         try {
             await bot.telegram.sendMessage(
@@ -114,9 +117,13 @@ broadcastScene.on('text', async (ctx) => {
     return;
 });
 
-module.exports = {
-    redeemScene,
-    addWalletScene,
-    removeWalletScene,
-    broadcastScene,
+stage.register(redeemScene);
+stage.register(addWalletScene);
+stage.register(removeWalletScene);
+stage.register(broadcastScene);
+bot.use(session());
+bot.use(stage.middleware());
+
+module.exports = () => {
+    console.log('[TELEGRAM] Scenes loaded');
 };

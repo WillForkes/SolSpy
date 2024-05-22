@@ -37,8 +37,6 @@ function clearFile(filePath) {
     fs.writeFile(filePath, '', (err) => {
         if (err) {
             console.error('Failed to clear the file:', err);
-        } else {
-            console.log('File has been cleared.');
         }
     });
 }

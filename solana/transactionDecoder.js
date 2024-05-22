@@ -1,7 +1,7 @@
 const web3 = require('@solana/web3.js');
 const { getTokenInfo, getRugCheckData} = require('./tokenData')
 const { addSignal, isDuplicateSignal } = require('../database/databaseInterface')
-const { sendSignal } = require('../telegram/bot');
+const { sendSignal, sendSellSignal } = require('../telegram/signals');
 const { getRecentTrades } = require('./walletTracker');
 var SPL_TOKEN_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 require('dotenv').config();
