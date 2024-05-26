@@ -81,6 +81,7 @@ _DO YOUR RESEARCH BEFORE INVESTING_!
 
     // * Send signal to all users if not being watched by just one user
     if(!isBeingWatched) {
+
         for (const user of users) {
             try {
                 await bot.telegram.sendMessage(
@@ -92,6 +93,7 @@ _DO YOUR RESEARCH BEFORE INVESTING_!
                         reply_markup: {
                             inline_keyboard: [
                                 [{ text: 'BonkBot', url: 'https://t.me/bonkbot_bot' }, { text: 'Trojan Bot', url: 'https://t.me/solana_trojanbot' }],
+                                [{ text: '💰 Get sell alerts on this 💰', callback_data: `sa:${user.telegramId}:${signal.tokenInfo.symbol}:${signal.walletAddress}`}]                                
                             ]
                         }
                     }
@@ -104,8 +106,37 @@ _DO YOUR RESEARCH BEFORE INVESTING_!
     }
 }
 
-async function sendSellSignal() {
+async function sendSellSignal(signal, userIds) {
+    let signalMsg = `💰 *Wallet Sell Alert* 💰
 
+Sell Info:
+• ❓ _${signal.tokenInfo.symbol}_ | _${signal.tokenInfo.name}_
+• 📉 Sold *${signal.amountSoldPercentage}%*
+    
+_You are receiving this notification because you opted in for the sell alert_
+    `;
+
+    // * Send signal to all users if not being watched by just one user
+    for (const uid of userIds) {
+        try {
+            await bot.telegram.sendMessage(
+                uid, 
+                signalMsg, 
+                { 
+                    parse_mode: 'Markdown', 
+                    disable_web_page_preview: true,
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: 'BonkBot', url: 'https://t.me/bonkbot_bot' }, { text: 'Trojan Bot', url: 'https://t.me/solana_trojanbot' }],
+                        ]
+                    }
+                }
+            );
+
+        } catch(error) {
+            console.error("Failed sending message to telegram user: " + user.telegramId + " - " + error);
+        }
+    }
 }
 
 module.exports = {

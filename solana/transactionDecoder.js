@@ -1,6 +1,6 @@
 const web3 = require('@solana/web3.js');
 const { getTokenInfo, getRugCheckData} = require('./tokenData')
-const { addSignal, isDuplicateSignal } = require('../database/databaseInterface')
+const { addSignal, isDuplicateSignal, getSellAlertsByWalletAndSymbol } = require('../database/databaseInterface')
 const { sendSignal, sendSellSignal } = require('../telegram/signals');
 const { getRecentTrades } = require('./walletTracker');
 var SPL_TOKEN_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
@@ -52,7 +52,6 @@ async function checkWallet(walletAddress) {
 
     // Check if transaction has errors
     if (transaction.meta.status && transaction.meta.status.Err) {
-        console.debug(`Transaction had on-chain error(s): ${JSON.stringify(transaction.meta.status.Err)}`);
         return;
     }
 
@@ -99,13 +98,33 @@ async function detectTokenTransfers(transaction, monitoredWalletAddress) {
         // Determine whether the monitored wallet is the source or destination
         if (postBalance.owner === monitoredWalletAddress) {
             if(amountPurchased < 0) {
+                // Get signal object from database
+                const userIds = await getSellAlertsByWalletAndSymbol(monitoredWalletAddress, contractAddress);
+                if(userIds.length == 0) {
+                    return;
+                }
+
                 // Sell amount percentage
                 const sellAmountPercentage = parseInt(Math.abs((amountPurchased) / preBalance.uiTokenAmount.uiAmount) * 100);
                 const tokenInfoBasic = await getRugCheckData(contractAddress);
-                const tokenInfoBasicName = tokenInfoBasic.tokenMeta.name;
-                const tokenInfoBasicSymbol = tokenInfoBasic.tokenMeta.symbol;
-                console.log(`[SELL] ${tokenInfoBasicName} (${tokenInfoBasicSymbol}) | Sold ${sellAmountPercentage}% | ${monitoredWalletAddress} | ${Date.now.toLocaleString()}`);
 
+                if(!tokenInfoBasic) {
+                    return;
+                }
+
+                // Sell signal obj
+                const sellSignal = {
+                    tokenInfo: {
+                        name: tokenInfoBasic.tokenMeta.name,
+                        symbol: tokenInfoBasic.tokenMeta.symbol
+                    },
+                    amountSoldPercentage: sellAmountPercentage,
+                    time: new Date(Date.now())
+                }
+
+                // Send sell signal
+                console.log(`[SELL] ${tokenInfoBasic.tokenMeta.name} (${tokenInfoBasic.tokenMeta.symbol}) | Sold ${sellAmountPercentage}% | ${monitoredWalletAddress} | ${Date.now.toLocaleString()}`);
+                sendSellSignal(sellSignal, userIds);
                 return;
             }
 
@@ -125,6 +144,7 @@ async function detectTokenTransfers(transaction, monitoredWalletAddress) {
                 amountPurchased: amountPurchased,
                 walletAddress: monitoredWalletAddress,
                 time: new Date(Date.now()),
+                sellAlerts: []
             };
             return allData;
         }

@@ -8,13 +8,13 @@ bot.action('redeem', (ctx) => {
 
 bot.on('callback_query', async (ctx) => {
     const callbackData = ctx.callbackQuery.data;
-    const [action, userTelegramId, tokenSymbol, walletAddress] = callbackData.split(':');
+    const [action, userTelegramId, symbol, walletAddress] = callbackData.split(':');
 
-    if (action === 'getSellAlert') {
+    if (action === 'sa') {
         // Add user id to the signal's sell alert list
-        const res = await addIDtoSignalSellAlerts(walletAddress, tokenSymbol, userTelegramId);
+        const res = await addIDtoSignalSellAlerts(walletAddress, symbol, userTelegramId);
         if(res === true) {
-            ctx.reply(`✅ Subscribed to sell alerts for the token: ${tokenSymbol}.`);
+            ctx.reply(`✅ Subscribed to sell alerts for token: ${symbol}.`);
         } else {
             ctx.reply('An error occured whilst subscribing to sell alerts. Please contact admin.')
         }

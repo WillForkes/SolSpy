@@ -248,8 +248,8 @@ async function getAllUserWatchlistWallets() {
 
 async function addIDtoSignalSellAlerts(wallet, symbol, userID) {
     try {
-        // Find signal with wallet address and symbol
-        let signal = await Signal.findOne({ walletAddress: wallet, 'tokenInfo.symbol': symbol });
+        // Find signal with wallet address and symbol descending in time
+        const signal = await Signal.findOne({ walletAddress: wallet, 'tokenInfo.symbol': symbol }).sort({ time: -1 });
         if (!signal) {
             return false;
         }
@@ -273,6 +273,17 @@ async function addIDtoSignalSellAlerts(wallet, symbol, userID) {
     }
 }
 
+    const signals = await Signal.find({ walletAddress: wallet, 'tokenInfo.contractAddress': contractAddress });
+    
+    // Get all the user ids subscribed to sell alerts
+    let sellAlerts = [];
+    for (let signal of signals) {
+        if (signal.sellAlerts) {
+            sellAlerts = sellAlerts.concat(signal.sellAlerts);
+        }
+    }
+    return sellAlerts;
+}
 
 module.exports = {
     getAllSignals,
@@ -292,5 +303,6 @@ module.exports = {
     redeemKey,
     getAllMembersWithSubscription,
     addKey,
-    addIDtoSignalSellAlerts
+    addIDtoSignalSellAlerts,
+    getSellAlertsByWalletAndSymbol
 };
