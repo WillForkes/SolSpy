@@ -273,6 +273,7 @@ async function addIDtoSignalSellAlerts(wallet, symbol, userID) {
     }
 }
 
+async function getSellAlertsByWalletAndSymbol(wallet, contractAddress) {
     const signals = await Signal.find({ walletAddress: wallet, 'tokenInfo.contractAddress': contractAddress });
     
     // Get all the user ids subscribed to sell alerts
