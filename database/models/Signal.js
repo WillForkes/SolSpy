@@ -29,7 +29,8 @@ const SignalSchema = new Schema({
     amountPurchased: Number,
     walletAddress: String,
     time: Date,
-    sellAlerts: [String]
+    sellAlerts: [String],
+    sold: Number
 });
 
 

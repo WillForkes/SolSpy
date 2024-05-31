@@ -98,16 +98,17 @@ async function detectTokenTransfers(transaction, monitoredWalletAddress) {
         // Determine whether the monitored wallet is the source or destination
         if (postBalance.owner === monitoredWalletAddress) {
             if(amountPurchased < 0) {
+                // Sell amount percentage
+                const sellAmountPercentage = parseInt(Math.abs((amountPurchased) / preBalance.uiTokenAmount.uiAmount) * 100);
+                
                 // Get signal object from database
-                const userIds = await getSellAlertsByWalletAndSymbol(monitoredWalletAddress, contractAddress);
+                const userIds = await getSellAlertsByWalletAndSymbol(monitoredWalletAddress, contractAddress, sellAmountPercentage);
                 if(userIds.length == 0) {
                     return;
                 }
 
-                // Sell amount percentage
-                const sellAmountPercentage = parseInt(Math.abs((amountPurchased) / preBalance.uiTokenAmount.uiAmount) * 100);
+                // Get token info
                 const tokenInfoBasic = await getRugCheckData(contractAddress);
-
                 if(!tokenInfoBasic) {
                     return;
                 }

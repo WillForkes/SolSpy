@@ -41,7 +41,7 @@ Risks Analysis:
     : "\n      ∟ No significant risks identified."}
 
 *Wallet Analysis*:
-• 📈 Last 4 trades: ${walletAnalysisMsg}
+• 📈 Last trades: ${walletAnalysisMsg}
 
 _DO YOUR RESEARCH BEFORE INVESTING_!
     `;

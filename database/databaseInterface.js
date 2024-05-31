@@ -273,7 +273,7 @@ async function addIDtoSignalSellAlerts(wallet, symbol, userID) {
     }
 }
 
-async function getSellAlertsByWalletAndSymbol(wallet, contractAddress) {
+async function getSellAlertsByWalletAndSymbol(wallet, contractAddress, amountSoldPercentage) {
     const signals = await Signal.find({ walletAddress: wallet, 'tokenInfo.contractAddress': contractAddress });
     
     // Get all the user ids subscribed to sell alerts
@@ -283,8 +283,26 @@ async function getSellAlertsByWalletAndSymbol(wallet, contractAddress) {
             sellAlerts = sellAlerts.concat(signal.sellAlerts);
         }
     }
+
+    for (let signal of signals) {
+        // Update the sold field with the amount sold percentage
+        const newAmt = (signal.sold + amountSoldPercentage <= 100) ? signal.sold + amountSoldPercentage : 100;
+        signal.sold = newAmt;
+        await signal.save();
+    }
+
     return sellAlerts;
 }
+
+async function getSoldPercentage(wallet, contractAddress) {
+    const signals = await Signal.find({ walletAddress: wallet, 'tokenInfo.contractAddress': contractAddress });
+    if(signals.length === 0) {
+        return 0;
+    }
+
+    return signals[0].sold;
+}
+
 
 module.exports = {
     getAllSignals,
@@ -305,5 +323,6 @@ module.exports = {
     getAllMembersWithSubscription,
     addKey,
     addIDtoSignalSellAlerts,
-    getSellAlertsByWalletAndSymbol
+    getSellAlertsByWalletAndSymbol,
+    getSoldPercentage
 };
