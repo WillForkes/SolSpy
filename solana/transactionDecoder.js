@@ -1,6 +1,6 @@
 const web3 = require('@solana/web3.js');
 const { getTokenInfo, getRugCheckData} = require('./tokenData')
-const { addSignal, isDuplicateSignal, getSellAlertsByWalletAndSymbol } = require('../database/databaseInterface')
+const { addSignal, isDuplicateSignal, getSellAlertsByMint, getSoldPercentage } = require('../database/databaseInterface')
 const { sendSignal, sendSellSignal } = require('../telegram/signals');
 const { getRecentTrades } = require('./walletTracker');
 var SPL_TOKEN_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
@@ -101,7 +101,7 @@ async function detectTokenTransfers(transaction, monitoredWalletAddress) {
                 const sellAmountPercentage = parseInt(Math.abs((amountPurchased) / preBalance.uiTokenAmount.uiAmount) * 100);
                 
                 // Get signal object from database
-                const userIds = await getSellAlertsByWalletAndSymbol(monitoredWalletAddress, contractAddress, sellAmountPercentage);
+                const userIds = await getSellAlertsByMint(contractAddress, monitoredWalletAddress, sellAmountPercentage);
                 if(userIds.length == 0) {
                     return;
                 }
@@ -112,6 +112,8 @@ async function detectTokenTransfers(transaction, monitoredWalletAddress) {
                     return;
                 }
 
+                const alreadySoldPercentage = await getSoldPercentage(contractAddress, monitoredWalletAddress);
+
                 // Sell signal obj
                 const sellSignal = {
                     tokenInfo: {
@@ -119,6 +121,7 @@ async function detectTokenTransfers(transaction, monitoredWalletAddress) {
                         symbol: tokenInfoBasic.tokenMeta.symbol
                     },
                     amountSoldPercentage: sellAmountPercentage,
+                    totalAmountSoldPercentage: alreadySoldPercentage,
                     time: new Date(Date.now())
                 }
 

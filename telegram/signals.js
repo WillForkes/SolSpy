@@ -93,7 +93,7 @@ _DO YOUR RESEARCH BEFORE INVESTING_!
                         reply_markup: {
                             inline_keyboard: [
                                 [{ text: 'BonkBot', url: 'https://t.me/bonkbot_bot' }, { text: 'Trojan Bot', url: 'https://t.me/solana_trojanbot' }],
-                                [{ text: '💰 Get sell alerts on this 💰', callback_data: `sa:${user.telegramId}:${signal.tokenInfo.symbol}:${signal.walletAddress}`}]                                
+                                [{ text: '💰 Get sell alerts on this 💰', callback_data: `sa:${user.telegramId}:${signal.tokenInfo.contractAddress}`}]                                
                             ]
                         }
                     }
@@ -111,7 +111,8 @@ async function sendSellSignal(signal, userIds) {
 
 Sell Info:
 • ❓ _${signal.tokenInfo.symbol}_ | _${signal.tokenInfo.name}_
-• 📉 Sold *${signal.amountSoldPercentage}%*
+• 📉 Just Sold *${signal.amountSoldPercentage}%*
+• 👀 Total Sold *${signal.totalAmountSoldPercentage}%*
     
 _You are receiving this notification because you opted in for the sell alert_
     `;

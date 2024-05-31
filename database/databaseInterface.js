@@ -246,10 +246,10 @@ async function getAllUserWatchlistWallets() {
     return wallets;
 }
 
-async function addIDtoSignalSellAlerts(wallet, symbol, userID) {
+async function addIDtoSignalSellAlerts(contractAddress, userID) {
     try {
         // Find signal with wallet address and symbol descending in time
-        const signal = await Signal.findOne({ walletAddress: wallet, 'tokenInfo.symbol': symbol }).sort({ time: -1 });
+        const signal = await Signal.findOne({ 'tokenInfo.contractAddress': contractAddress }).sort({ time: -1 });
         if (!signal) {
             return false;
         }
@@ -273,30 +273,26 @@ async function addIDtoSignalSellAlerts(wallet, symbol, userID) {
     }
 }
 
-async function getSellAlertsByWalletAndSymbol(wallet, contractAddress, amountSoldPercentage) {
-    const signals = await Signal.find({ walletAddress: wallet, 'tokenInfo.contractAddress': contractAddress });
+async function getSellAlertsByMint(contractAddress, walletAddress, amountSoldPercentage) {
+    const signal = await Signal.findOne({ walletAddress: walletAddress, 'tokenInfo.contractAddress': contractAddress }).sort({ time: -1 });
     
     // Get all the user ids subscribed to sell alerts
-    let sellAlerts = [];
-    for (let signal of signals) {
-        if (signal.sellAlerts) {
-            sellAlerts = sellAlerts.concat(signal.sellAlerts);
-        }
+    let sellAlerts = signal.sellAlerts;
+    if (!sellAlerts) {
+        sellAlerts = [];
     }
 
-    for (let signal of signals) {
-        // Update the sold field with the amount sold percentage
-        const newAmt = (signal.sold + amountSoldPercentage <= 100) ? signal.sold + amountSoldPercentage : 100;
-        signal.sold = newAmt;
-        await signal.save();
-    }
+    // Update the sold field with the amount sold percentage
+    const newAmt = (signal.sold + amountSoldPercentage <= 100) ? signal.sold + amountSoldPercentage : 100;
+    signal.sold = newAmt;
+    await signal.save();
 
     return sellAlerts;
 }
 
-async function getSoldPercentage(wallet, contractAddress) {
-    const signals = await Signal.find({ walletAddress: wallet, 'tokenInfo.contractAddress': contractAddress });
-    if(signals.length === 0) {
+async function getSoldPercentage(contractAddress, walletAddress) {
+    const signal = await Signal.findOne({ walletAddress: walletAddress, 'tokenInfo.contractAddress': contractAddress }).sort({ time: -1 });
+    if(signal === null) {
         return 0;
     }
 
@@ -327,6 +323,6 @@ module.exports = {
     getAllMembersWithSubscription,
     addKey,
     addIDtoSignalSellAlerts,
-    getSellAlertsByWalletAndSymbol,
+    getSellAlertsByMint,
     getSoldPercentage
 };
