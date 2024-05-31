@@ -300,6 +300,10 @@ async function getSoldPercentage(wallet, contractAddress) {
         return 0;
     }
 
+    if(signals[0].sold === undefined) {
+        return 0;
+    }
+
     return signals[0].sold;
 }
 

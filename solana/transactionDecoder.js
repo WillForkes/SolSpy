@@ -89,14 +89,13 @@ async function detectTokenTransfers(transaction, monitoredWalletAddress) {
 
         const contractAddress = preBalance.mint
         
-        if(contractAddress == "So11111111111111111111111111111111111111112" || contractAddress == "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v") {
-            continue
-        }
+        if(contractAddress == "So11111111111111111111111111111111111111112" || contractAddress == "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v") {continue;}
 
         const amountPurchased = postBalance.uiTokenAmount.uiAmount - preBalance.uiTokenAmount.uiAmount;
 
         // Determine whether the monitored wallet is the source or destination
         if (postBalance.owner === monitoredWalletAddress) {
+            // * Is sell?
             if(amountPurchased < 0) {
                 // Sell amount percentage
                 const sellAmountPercentage = parseInt(Math.abs((amountPurchased) / preBalance.uiTokenAmount.uiAmount) * 100);
@@ -129,10 +128,9 @@ async function detectTokenTransfers(transaction, monitoredWalletAddress) {
                 return;
             }
 
+            // * Is buy:
             const tokenInfo = await getTokenInfo(contractAddress);
-            if(!tokenInfo){
-                continue
-            }
+            if(!tokenInfo){continue}
 
             console.log(`[BUY] ${tokenInfo.name} (${tokenInfo.symbol}) | +${amountPurchased} ${tokenInfo.symbol} | ${monitoredWalletAddress} | ${Date(transaction.blockTime).toLocaleString()}`);
             if(tokenInfo.analysis.score > 1000) {
@@ -145,7 +143,8 @@ async function detectTokenTransfers(transaction, monitoredWalletAddress) {
                 amountPurchased: amountPurchased,
                 walletAddress: monitoredWalletAddress,
                 time: new Date(Date.now()),
-                sellAlerts: []
+                sellAlerts: [],
+                sold: 0
             };
             return allData;
         }

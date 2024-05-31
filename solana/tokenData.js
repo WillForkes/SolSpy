@@ -103,7 +103,6 @@ async function getTokenInfo(mint) {
         liquidity: liquidity,
         dayVolume: dayVolume,
         contractAddress: mint,
-        sold: 0
     };
 
     return info;
