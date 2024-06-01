@@ -276,10 +276,15 @@ async function addIDtoSignalSellAlerts(contractAddress, userID) {
 async function getSellAlertsByMint(contractAddress, walletAddress, amountSoldPercentage) {
     const signal = await Signal.findOne({ walletAddress: walletAddress, 'tokenInfo.contractAddress': contractAddress }).sort({ time: -1 });
     
+    if(!signal) {
+        return [];
+    }
+    
     // Get all the user ids subscribed to sell alerts
     let sellAlerts = signal?.sellAlerts || [];
 
     // Update the sold field with the amount sold percentage
+    // check if signal sold is not undefined
     const newAmt = (signal.sold + amountSoldPercentage <= 100) ? signal.sold + amountSoldPercentage : 100;
     signal.sold = newAmt;
     await signal.save();
@@ -302,9 +307,7 @@ async function getSoldPercentage(contractAddress, walletAddress) {
 
 async function addDaysToAllSubscriptions(days) {
     try {
-        const members = await getAllMembers();
-        const currentDate = new Date();
-    
+        const members = await getAllMembers();    
         for (const member of members) {
             if (member.isSubscribed) {
                 const currentEndDate = member.subscriptionEndDate ? new Date(member.subscriptionEndDate) : new Date();
