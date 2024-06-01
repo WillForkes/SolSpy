@@ -81,9 +81,7 @@ async function main() {
 if(process.env.NODE_ENV !== 'development') {
     cron.schedule('*/5 * * * *', () => {
         console.log('Running stat tracker...');
-        startTrackingPrices().then(() => {
-            console.log('Statistics run completed. CSV file updated.');
-        }).catch(error => {
+        startTrackingPrices().catch(error => {
             console.error('Error gathering statistics:', error);
         });
     });

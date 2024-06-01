@@ -277,10 +277,10 @@ async function getSellAlertsByMint(contractAddress, walletAddress, amountSoldPer
     const signal = await Signal.findOne({ walletAddress: walletAddress, 'tokenInfo.contractAddress': contractAddress }).sort({ time: -1 });
     
     // Get all the user ids subscribed to sell alerts
-    let sellAlerts = signal.sellAlerts;
     if (!sellAlerts) {
         sellAlerts = [];
     }
+    let sellAlerts = signal.sellAlerts;
 
     // Update the sold field with the amount sold percentage
     const newAmt = (signal.sold + amountSoldPercentage <= 100) ? signal.sold + amountSoldPercentage : 100;

@@ -15,7 +15,7 @@ bot.on('callback_query', async (ctx) => {
         const res = await addIDtoSignalSellAlerts(contractAddress, userTelegramId);
 
         if(res === true) {
-            ctx.reply(`✅ Subscribed to sell alerts for token: ${symbol}.`);
+            ctx.reply(`✅ Subscribed to sell alerts for token (${contractAddress}).`);
         } else {
             ctx.reply('An error occured whilst subscribing to sell alerts. Please contact admin.')
         }
