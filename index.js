@@ -80,7 +80,6 @@ async function main() {
 // * Run statistics tracker every 5 minutes
 if(process.env.NODE_ENV !== 'development') {
     cron.schedule('*/5 * * * *', () => {
-        console.log('Running stat tracker...');
         startTrackingPrices().catch(error => {
             console.error('Error gathering statistics:', error);
         });
