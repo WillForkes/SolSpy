@@ -3,3 +3,4 @@ node_modules/
 data/new_keys.txt
 data/new_wallets.txt
 *.csv
+__tests__/

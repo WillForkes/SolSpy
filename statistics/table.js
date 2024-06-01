@@ -1,11 +1,15 @@
 const fs = require('fs');
 const Papa = require('papaparse');
+require('dotenv').config();
 
 class DataTable {
     constructor() {
         this.filename = "stats.csv";
         this.data = [];
-        this.loadFromCSV();
+
+        if(process.env.NODE_ENV !== 'development') {
+            this.loadFromCSV();
+        }
     }
 
     getEntry(mint) {

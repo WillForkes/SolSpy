@@ -42,9 +42,10 @@ async function getRecentTrades(walletAddress) {
                 continue;
             }
 
-            if(transaction.coinData.symbol == "USDC" || transaction.coinData.symbol == "SOL" ) {
+            if(transaction.coinData.symbol == "USDC" || transaction.coinData.symbol == "SOL" || transaction.coinData.symbol == "USDT" ) {
                 continue;
             }
+
 
             // Check if profit percent is negative
             if(transaction.profitLoss.profitPercent < -70) {
