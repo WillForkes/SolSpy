@@ -277,7 +277,7 @@ async function getSellAlertsByMint(contractAddress, walletAddress, amountSoldPer
     const signal = await Signal.findOne({ walletAddress: walletAddress, 'tokenInfo.contractAddress': contractAddress }).sort({ time: -1 });
     
     // Get all the user ids subscribed to sell alerts
-    if (!signal.sellAlerts || signal.sellAlerts.length === 0) {
+    if (signal.sellAlerts === undefined) {
         sellAlerts = [];
     }
     let sellAlerts = signal.sellAlerts;
