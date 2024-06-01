@@ -110,6 +110,7 @@ ${watchingList}`, { parse_mode: 'Markdown' });
     }
 });
 
+
 bot.command('broadcast', async (ctx) => {
     // Check if the user is an admin
     const telegramId = ctx.from.id.toString();
@@ -121,6 +122,19 @@ bot.command('broadcast', async (ctx) => {
     }
 
     ctx.scene.enter('broadcastScene');
+})
+
+bot.command('add_days', async (ctx) => {
+    // Check if the user is an admin
+    const telegramId = ctx.from.id.toString();
+    const member = await getMember(telegramId);
+
+    if(member.subscriptionType !== "Admin") {
+        ctx.reply('You do not have permission to use this command.');
+        return;
+    }
+
+    ctx.scene.enter('addDaysScene');
 })
 
 

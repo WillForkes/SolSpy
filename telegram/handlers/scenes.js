@@ -1,12 +1,13 @@
 const bot = require('../bot');
 const { Scenes, session } = require('telegraf');
-const { getKey, redeemKey, addWalletToUserWatchlist, removeWalletFromUserWatchlist, getAllMembersWithSubscription } = require("../../database/databaseInterface");
+const { getKey, redeemKey, addWalletToUserWatchlist, removeWalletFromUserWatchlist, getAllMembersWithSubscription, addDaysToAllSubscriptions } = require("../../database/databaseInterface");
 const { isValidSolanaAddress } = require("../util");
 
 const redeemScene = new Scenes.BaseScene('redeemScene');
 const addWalletScene = new Scenes.BaseScene('addWalletScene');
 const removeWalletScene = new Scenes.BaseScene('removeWalletScene');
 const broadcastScene = new Scenes.BaseScene('broadcastScene');
+const addDaysScene = new Scenes.BaseScene('addDaysScene');
 const stage = new Scenes.Stage();
 
 // ! REDEEM KEY SCENE
@@ -117,10 +118,38 @@ broadcastScene.on('text', async (ctx) => {
     return;
 });
 
+addDaysScene.enter((ctx) => ctx.reply('Please reply to this message with the number of days you want to add to all active Pro Member subscriptions.'));
+addDaysScene.on('text', async (ctx) => {
+    let numberOfDays = ctx.message.text;
+    
+    // convert to integer
+    numberOfDays = parseInt(numberOfDays);
+
+    if(isNaN(numberOfDays)) {
+        ctx.reply('Invalid number of days. Please try again.');
+        ctx.scene.leave();
+        return;
+    }
+
+    const successAdd = await addDaysToAllSubscriptions(numberOfDays);
+
+    if(successAdd == true) {
+        ctx.reply(`Successfully added ${numberOfDays} days to all subscriptions.`);
+    } else {
+        ctx.reply(`Failed to add ${numberOfDays} days to all subscriptions.`);
+    }
+
+    ctx.scene.leave();
+    return;
+});
+
+
+
 stage.register(redeemScene);
 stage.register(addWalletScene);
 stage.register(removeWalletScene);
 stage.register(broadcastScene);
+stage.register(addDaysScene);
 bot.use(session());
 bot.use(stage.middleware());
 

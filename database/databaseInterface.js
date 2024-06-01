@@ -300,6 +300,27 @@ async function getSoldPercentage(contractAddress, walletAddress) {
     return signals[0].sold;
 }
 
+async function addDaysToAllSubscriptions(days) {
+    try {
+        const members = await getAllMembers();
+        const currentDate = new Date();
+    
+        for (const member of members) {
+            if (member.isSubscribed) {
+                const currentEndDate = member.subscriptionEndDate ? new Date(member.subscriptionEndDate) : new Date();
+                currentEndDate.setDate(currentEndDate.getDate() + days);
+                await Member.updateOne({ telegramId: member.telegramId }, {
+                    $set: { subscriptionEndDate: currentEndDate }
+                });
+            }
+        }
+    } catch {
+        return false;
+    }
+
+    return true;
+}
+
 
 module.exports = {
     getAllSignals,
@@ -321,5 +342,6 @@ module.exports = {
     addKey,
     addIDtoSignalSellAlerts,
     getSellAlertsByMint,
-    getSoldPercentage
+    getSoldPercentage,
+    addDaysToAllSubscriptions
 };
