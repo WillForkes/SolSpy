@@ -135,7 +135,7 @@ _You are receiving this notification because you opted in for the sell alert_
             );
 
         } catch(error) {
-            console.error("Failed sending message to telegram user: " + user.telegramId + " - " + error);
+            console.error("Failed sending message to telegram user: " + uid + " - " + error);
         }
     }
 }
