@@ -1,6 +1,7 @@
 const bot = require('../bot');
-const { doesMemberExist, registerMember, getMember } = require("../../database/databaseInterface");
-
+const { doesMemberExist, registerMember, getMember, getAllSignals } = require("../../database/databaseInterface");
+const DataTable = require('../../statistics/table');
+const { getSignal } = require('../../database/databaseInterface');
 
 // ! BOT COMMAND //////////
 bot.start(async (ctx) => {
@@ -137,6 +138,93 @@ bot.command('add_days', async (ctx) => {
     ctx.scene.enter('addDaysScene');
 })
 
+bot.command('signal', async (ctx) => {
+    // Check if the user is an admin
+    const telegramId = ctx.from.id.toString();
+    const member = await getMember(telegramId);
+
+    if(member.subscriptionType !== "Admin") {
+        ctx.reply('You do not have permission to use this command.');
+        return;
+    }
+
+    ctx.scene.enter('signalScene');
+})
+
+bot.command('stats' , async (ctx) => {
+
+    const dt = new DataTable();
+
+    //! TEMP - ADD TIMESTAMP TO ALL ENTRIES FROM SIGNAL DATABASE ACTUAL TIME
+    // for(let i=0; i<dt.data.length; i++) {
+    //     // Get signal from database
+    //     const signal = await getSignal(dt.data[i][2]);
+        
+    //     // Add timestamp to entry
+    //     // convert datetime to unix timestamp
+    //     dt.data[i][8] = parseInt(signal.time.getTime() / 1000);
+    // }
+
+    // dt.exportToCSV();
+    
+    const winnerData = dt.data;
+    const last10Calls = winnerData.sort((a, b) => {
+        return b[8] - a[8];
+    });
+
+    // Calculate the last 10 winners
+    const winners = last10Calls.slice(0, 10).map(entry => {
+        const initialPrice = parseFloat(entry[3]);
+        const highestPrice = parseFloat(entry[6]);
+        const percentageIncrease = ((highestPrice - initialPrice) / initialPrice) * 100;
+        const percentageIncreaseRounded = Math.round(percentageIncrease * 100) / 100;
+
+        return {symbol: entry[1], percentageIncrease: percentageIncreaseRounded};
+    });
+
+    // Search in DB for the last 10 signals
+    const signals = await getAllSignals();
+    signals.sort((a, b) => {
+        return b.time - a.time;
+    });
+    const lastSignals = signals.slice(0, 10);
+
+    // Make a list of 10 signals in markdown format
+    let stats = `🏆 *Last 10 Signals* 🏆\n\n`;
+
+    let wins = 0;
+    let winsPercent = 0;
+    let losses = 0;
+
+    for(const signal of lastSignals) {
+        if(signal.tokenInfo.price == 0) { continue }
+
+        // see if the symbol is in the winners array winner.symbol 
+        const isWinner = winners.some(winner => winner.symbol === signal.tokenInfo.symbol);
+        if(isWinner) {
+            // Get the winners object
+            const winner = winners.find(winner => winner.symbol === signal.tokenInfo.symbol);
+            wins++;
+            winsPercent += winner.percentageIncrease;
+            stats += `📈 ${winner.symbol} | +${winner.percentageIncrease}%\n`;
+        } else {
+            losses++;
+            winsPercent -= 50;
+            stats += `📉 ${signal.tokenInfo.symbol} | ---\n`;
+        }
+    };
+
+    // Add win/loss count
+    stats += `
+🏆 *Wins*: ${wins}
+🗑️ *Losses*: ${losses}
+🚀 *Winrate*: ${Math.round((wins / (wins + losses)) * 100)}%
+🟢 *Average Gain*: ${Math.round(winsPercent / 10)}%
+        ∟ _Assuming 50% stop loss_`;
+
+
+    ctx.reply(stats, { parse_mode: 'Markdown' });
+});
 
 module.exports = () => {
     console.log('[TELEGRAM] Commands loaded');

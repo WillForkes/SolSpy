@@ -33,7 +33,7 @@ async function getRugCheckData(mint) {
     }    
 }
 
-async function getTokenInfo(mint) {
+async function getTokenInfo(mint, bypassFilters = false) {
     // Get risk analysis
     const rugCheckData = await getRugCheckData(mint);
     if(!rugCheckData) {return}
@@ -59,30 +59,31 @@ async function getTokenInfo(mint) {
     const marketCapThreshold = launchedInLast2h ? 150000 : 450000;
     const liquidity = priceData.liquidity;
     const dayVolume = priceData.dayVolume;
-
     const liqToMCRatio = liquidity / marketCap;
 
-    // Check if market capitalization meets threshold
-    if (marketCap < marketCapThreshold || dayVolume < liquidity) {
-        return;
-    }
+    if(!bypassFilters) {
+        // Check if market capitalization meets threshold
+        if (marketCap < marketCapThreshold || dayVolume < liquidity) {
+            return;
+        }
 
-    // Check if 24h volume is less than marketcap * 0.8
-    if (dayVolume < (marketCap * 0.7) && !launchedInLast2h) {
-        return;
-    }
+        // Check if 24h volume is less than marketcap * 0.8
+        if (dayVolume < (marketCap * 0.7) && !launchedInLast2h) {
+            return;
+        }
 
-    switch(marketCap) {
-        case marketCap > 100000 && marketCap < 1000000: // 100k - 1m
-            if(liqToMCRatio < 0.12) {
-                return;
-            }
-            break;
-        case marketCap > 1000000 && marketCap < 10000000: // 1m - 10m
-            if(liqToMCRatio < 0.04) {
-                return;
-            }
-            break;
+        switch(marketCap) {
+            case marketCap > 100000 && marketCap < 1000000: // 100k - 1m
+                if(liqToMCRatio < 0.12) {
+                    return;
+                }
+                break;
+            case marketCap > 1000000 && marketCap < 10000000: // 1m - 10m
+                if(liqToMCRatio < 0.04) {
+                    return;
+                }
+                break;
+        }
     }
 
     const info = {

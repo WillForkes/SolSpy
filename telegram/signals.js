@@ -1,6 +1,7 @@
 const bot = require("./bot");
 const { getAllMembersWithSubscription } = require("../database/databaseInterface");
 const { formatNumber } = require("./util");
+const { keyboard } = require("telegraf/markup");
 
 // ! SEND SIGNAL FUNCTIONs
 async function sendSignal(signal, recentTrades) {
@@ -11,8 +12,12 @@ async function sendSignal(signal, recentTrades) {
 
     const sentimentEmoji1h = signal.tokenInfo.sentiment.h1.toLowerCase().includes('neutral') ? '❓' : signal.tokenInfo.sentiment.h1.toLowerCase().includes('bullish') ? '🚀' : '🐻';
     const sentimentEmoji24h = signal.tokenInfo.sentiment.h24.toLowerCase().includes('neutral') ? '❓' : signal.tokenInfo.sentiment.h24.toLowerCase().includes('bullish') ? '🚀' : '🐻';
-    
-    let walletAnalysisMsg = `${recentTrades.length > 0 ? recentTrades.map(trade => `\n      ∟ ${trade.profitPercent <= 0 ? '🔴 ' : '🟢 +'}${trade.profitPercent}% | +$${trade.profitAmount} | ${trade.symbol}`).join('') : "\n      ∟ Failed to load recent trades."}`;
+    let walletAnalysisMsg;
+
+    if(!signal.manual) {
+        walletAnalysisMsg = `${recentTrades.length > 0 ? recentTrades.map(trade => `\n      ∟ ${trade.profitPercent <= 0 ? '🔴 ' : '🟢 +'}${trade.profitPercent}% | +$${trade.profitAmount} | ${trade.symbol}`).join('') : "\n      ∟ Failed to load recent trades."}`;
+    }
+
     let signalMsg = `💎 *Wallet Buy Alert* 💎
 
 Token Info:
@@ -22,12 +27,10 @@ Token Info:
 • 💧 *Liquidity*: ${signal.tokenInfo.liquidity == 0 ? '?' : "$" + formatNumber(signal.tokenInfo.liquidity)}
 • ⏰ *24h Volume*: ${signal.tokenInfo.dayVolume == 0 ? '?' : "$" + formatNumber(signal.tokenInfo.dayVolume)}
 • 💸 *Invested*: ${signal.tokenInfo.price == 0 ? parseInt(signal.amountPurchased).toString() + " Tokens" : "$" + (signal.amountPurchased * signal.tokenInfo.price).toFixed(2)}
-${signal.tokenInfo.marketCap < 210000 ? '🚨 New token - High risk 🚨' : ''}
-
-Buying Sentiment:
+${signal.tokenInfo.marketCap < 210000 ? '🚨 New token - High risk 🚨' : '' }
+${!signal.manual ? `Buying Sentiment:
 • 1h - ${sentimentEmoji1h} ${signal.tokenInfo.sentiment.h1}
-• 24h - ${sentimentEmoji24h} ${signal.tokenInfo.sentiment.h24}
-
+• 24h - ${sentimentEmoji24h} ${signal.tokenInfo.sentiment.h24}` : '' }
 Links:
 • 🔗 [DexScreener](https://dexscreener.com/solana/${signal.tokenInfo.contractAddress})
 • 🔗 [Photon](https://photon-sol.tinyastro.io/en/lp/${signal.tokenInfo.contractAddress})
@@ -40,50 +43,64 @@ Risks Analysis:
         `\n      ∟ ${risk.level === 'danger' ? '🔴' : risk.level === 'warn' ? '🟡' : '🟢'} ${risk.name}: ${risk.description} (Score: ${risk.score})`).join('')
     : "\n      ∟ No significant risks identified."}
 
-*Wallet Analysis*:
+${!signal.manual ? `*Wallet Analysis*:
 • 📈 Last trades: ${walletAnalysisMsg}
+    ` : `*💌 Manual Signal 💌*
+This signal was manually sent by our team.`}
 
-_DO YOUR RESEARCH BEFORE INVESTING_!
+_DYOR_!
     `;
 
+    // * Check if wallet is being watched by any users and send signal to them not to all
     let isBeingWatched = false;
-    for (const user of users) {
-        if(isBeingWatched) break;
+    if(!signal.manual) {
+        for (const user of users) {
+            if(isBeingWatched) break;
 
-        for (const wallet of user.watching) {
-            if(wallet.walletAddress === signal.walletAddress) {
-                isBeingWatched = true;
-                signalMsg += `\n\n👀 *You are watching this wallet!*`;
+            for (const wallet of user.watching) {
+                if(wallet.walletAddress === signal.walletAddress) {
+                    isBeingWatched = true;
+                    signalMsg += `\n\n👀 *You are watching this wallet!*`;
 
-                // * Send signal to just this user
-                try {
-                    await bot.telegram.sendMessage(
-                        user.telegramId, 
-                        signalMsg, 
-                        { 
-                            parse_mode: 'Markdown', 
-                            disable_web_page_preview: true,
-                            reply_markup: {
-                                inline_keyboard: [
-                                    [{ text: 'BonkBot', url: 'https://t.me/bonkbot_bot' }, { text: 'Trojan Bot', url: 'https://t.me/solana_trojanbot' }]
-                                ]
+                    // * Send signal to just this user
+                    try {
+                        await bot.telegram.sendMessage(
+                            user.telegramId, 
+                            signalMsg, 
+                            { 
+                                parse_mode: 'Markdown', 
+                                disable_web_page_preview: true,
+                                reply_markup: {
+                                    inline_keyboard: [
+                                        [{ text: 'BonkBot', url: 'https://t.me/bonkbot_bot' }, { text: 'Trojan Bot', url: 'https://t.me/solana_trojanbot?start=r-comeonrightt' }]
+                                    ]
+                                }
                             }
-                        }
-                    );
-                } catch(error) {
-                    console.error("Failed sending buy signal to telegram user: " + user.telegramId + " - " + error);
-                }
+                        );
+                    } catch(error) {
+                        console.error("Failed sending buy signal to telegram user: " + user.telegramId + " - " + error);
+                    }
 
-                break;
+                    break;
+                }
             }
         }
     }
 
     // * Send signal to all users if not being watched by just one user
     if(!isBeingWatched) {
-
         for (const user of users) {
             try {
+                // Create inline keyboard
+                const keyboard = [
+                    [{ text: 'BonkBot', url: 'https://t.me/bonkbot_bot?start=ref_6vi5y' }, { text: 'Trojan Bot', url: 'https://t.me/solana_trojanbot?start=r-comeonrightt' }]                                
+                ]
+
+                //! Only add sell alert buttons if manual=false
+                if(!signal.manual) {
+                    keyboard.push([{ text: '💰 Get sell alerts on this 💰', callback_data: `sa:${user.telegramId}:${signal.tokenInfo.contractAddress}`}]);
+                }
+ 
                 await bot.telegram.sendMessage(
                     user.telegramId, 
                     signalMsg, 
@@ -91,10 +108,7 @@ _DO YOUR RESEARCH BEFORE INVESTING_!
                         parse_mode: 'Markdown', 
                         disable_web_page_preview: true,
                         reply_markup: {
-                            inline_keyboard: [
-                                [{ text: 'BonkBot', url: 'https://t.me/bonkbot_bot' }, { text: 'Trojan Bot', url: 'https://t.me/solana_trojanbot' }],
-                                [{ text: '💰 Get sell alerts on this 💰', callback_data: `sa:${user.telegramId}:${signal.tokenInfo.contractAddress}`}]                                
-                            ]
+                            inline_keyboard: keyboard
                         }
                     }
                 );

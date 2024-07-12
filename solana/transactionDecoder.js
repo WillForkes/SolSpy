@@ -22,14 +22,17 @@ async function checkWallet(walletAddress) {
         return;
     }
 
-    // Check if within last 5 mins
     if(transaction == null) {
         return
     }
 
+    // Check if transaction has errors
+    if (transaction.meta.status && transaction.meta.status.Err) {
+        return;
+    }
+
     // Check if transaction is over 5 mins old
-    const currentUnixTimestamp = Math.floor(Date.now() / 1000);
-    const timeDifference = currentUnixTimestamp - transaction.blockTime; 
+    const timeDifference = (Math.floor(Date.now() / 1000)) - transaction.blockTime; 
     if(timeDifference > 300) {
         return
     }
@@ -50,12 +53,8 @@ async function checkWallet(walletAddress) {
         return;
     }
 
-    // Check if transaction has errors
-    if (transaction.meta.status && transaction.meta.status.Err) {
-        return;
-    }
 
-    // Get signal data
+    // * Get signal data
     const signal = await detectTokenTransfers(transaction, pubkey.toBase58())
     if(signal) {
         const isDup = await isDuplicateSignal(signal.tokenInfo.symbol)
@@ -82,76 +81,78 @@ async function detectTokenTransfers(transaction, monitoredWalletAddress) {
     for (let i = 0; i < preTokenBalances.length; i++) {
         const preBalance = preTokenBalances[i];
         const postBalance = postTokenBalances[i];
+        const contractAddress = preBalance.mint
 
+        // Check if the token balance has changed, if it is a sol ot usdt, and if the monitored wallet is the source or destination
         if (!postBalance || preBalance.uiTokenAmount.uiAmount === postBalance.uiTokenAmount.uiAmount) {
             continue;
         }
-
-        const contractAddress = preBalance.mint
-        
-        if(contractAddress == "So11111111111111111111111111111111111111112" || contractAddress == "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v") {continue;}
-
-        const amountPurchased = postBalance.uiTokenAmount.uiAmount - preBalance.uiTokenAmount.uiAmount;
-
-        // Determine whether the monitored wallet is the source or destination
-        if (postBalance.owner === monitoredWalletAddress) {
-            // * Is sell?
-            if(amountPurchased < 0) {
-                // Sell amount percentage
-                const sellAmountPercentage = parseInt(Math.abs((amountPurchased) / preBalance.uiTokenAmount.uiAmount) * 100);
-                
-                // Get signal object from database
-                const userIds = await getSellAlertsByMint(contractAddress, monitoredWalletAddress, sellAmountPercentage);
-                if(userIds.length == 0) {
-                    return;
-                }
-
-                // Get token info
-                const tokenInfoBasic = await getRugCheckData(contractAddress);
-                if(!tokenInfoBasic) {
-                    return;
-                }
-
-                const alreadySoldPercentage = await getSoldPercentage(contractAddress, monitoredWalletAddress);
-
-                // Sell signal obj
-                const sellSignal = {
-                    tokenInfo: {
-                        name: tokenInfoBasic.tokenMeta.name,
-                        symbol: tokenInfoBasic.tokenMeta.symbol
-                    },
-                    amountSoldPercentage: sellAmountPercentage,
-                    totalAmountSoldPercentage: alreadySoldPercentage,
-                    time: new Date(Date.now())
-                }
-
-                // Send sell signal
-                console.log(`[SELL] ${tokenInfoBasic.tokenMeta.name} (${tokenInfoBasic.tokenMeta.symbol}) | Sold ${sellAmountPercentage}% | ${monitoredWalletAddress} | ${Date.now.toLocaleString()}`);
-                sendSellSignal(sellSignal, userIds);
-                return;
-            }
-
-            // * Is buy:
-            const tokenInfo = await getTokenInfo(contractAddress);
-            if(!tokenInfo){continue}
-
-            console.log(`[BUY] ${tokenInfo.name} (${tokenInfo.symbol}) | +${amountPurchased} ${tokenInfo.symbol} | ${monitoredWalletAddress} | ${Date(transaction.blockTime).toLocaleString()}`);
-            if(tokenInfo.analysis.score > 1000) {
-                console.log("Bad token score - high rug pull risk. Not sending signal...");
-                return;
-            }
-
-            const allData = {
-                tokenInfo,
-                amountPurchased: amountPurchased,
-                walletAddress: monitoredWalletAddress,
-                time: new Date(Date.now()),
-                sellAlerts: [],
-                sold: 0
-            };
-            return allData;
+        if(contractAddress == "So11111111111111111111111111111111111111112" || contractAddress == "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v") {
+            continue;
         }
+        if (postBalance.owner !== monitoredWalletAddress) {
+            continue;
+        }
+        
+        const amountPurchased = postBalance.uiTokenAmount.uiAmount - preBalance.uiTokenAmount.uiAmount;
+        // * Is sell?
+        if(amountPurchased < 0) {
+            // Sell amount percentage
+            const sellAmountPercentage = parseInt(Math.abs((amountPurchased) / preBalance.uiTokenAmount.uiAmount) * 100);
+            
+            // Get signal object from database
+            const userIds = await getSellAlertsByMint(contractAddress, monitoredWalletAddress, sellAmountPercentage);
+            if(userIds.length == 0) {
+                return;
+            }
+
+            // Get token info
+            const tokenInfoBasic = await getRugCheckData(contractAddress);
+            if(!tokenInfoBasic) {
+                return;
+            }
+
+            const alreadySoldPercentage = await getSoldPercentage(contractAddress, monitoredWalletAddress);
+
+            // Sell signal obj
+            const sellSignal = {
+                tokenInfo: {
+                    name: tokenInfoBasic.tokenMeta.name,
+                    symbol: tokenInfoBasic.tokenMeta.symbol
+                },
+                amountSoldPercentage: sellAmountPercentage,
+                totalAmountSoldPercentage: alreadySoldPercentage,
+                time: new Date(Date.now())
+            }
+
+            // Send sell signal
+            console.log(`[SELL] ${tokenInfoBasic.tokenMeta.name} (${tokenInfoBasic.tokenMeta.symbol}) | Sold ${sellAmountPercentage}% | ${monitoredWalletAddress} | ${Date.now.toLocaleString()}`);
+            sendSellSignal(sellSignal, userIds);
+            return;
+        }
+
+        // * Is buy:
+        const tokenInfo = await getTokenInfo(contractAddress);
+        if(!tokenInfo){continue}
+
+        console.log(`[BUY] ${tokenInfo.name} (${tokenInfo.symbol}) | +${amountPurchased} ${tokenInfo.symbol} | ${monitoredWalletAddress} | ${Date(transaction.blockTime).toLocaleString()}`);
+        if(tokenInfo.analysis.score > 1000) {
+            console.log("Bad token score - high rug pull risk. Not sending signal...");
+            return;
+        }
+
+        const allData = {
+            tokenInfo,
+            amountPurchased: amountPurchased,
+            walletAddress: monitoredWalletAddress,
+            time: new Date(Date.now()),
+            sellAlerts: [],
+            sold: 0,
+            manual: false
+        };
+        return allData;
     }
+
     return;
 }
 

@@ -22,6 +22,11 @@ async function getAllSignals() {
     return signals;
 }
 
+async function getSignal(mint) {
+    const signal = await Signal.findOne({ 'tokenInfo.contractAddress': mint }).sort({ time: 1 });
+    return signal;
+}
+
 async function addSignal(signal) {
     const newSignal = await new Signals(signal)
     await newSignal.save();
@@ -177,9 +182,9 @@ async function addWalletToUserWatchlist(telegramId, walletAddress) {
             }
         }
 
-        // Check to see if user has 3 wallets already
-        if(member.watching.length >= 3) {
-            return "You are already watching 3 wallets. Please remove a wallet before adding another.";
+        // Check to see if user has 2 wallets already
+        if(member.watching.length >= 2) {
+            return "You are already watching 2 wallets. Please remove a wallet before adding another.";
         }
 
         // Check to see if wallet exists in the WalletWhitelist
@@ -327,6 +332,7 @@ async function addDaysToAllSubscriptions(days) {
 
 module.exports = {
     getAllSignals,
+    getSignal,
     addWalletToWhitelist,
     getAllUserWatchlistWallets,
     addWalletToUserWatchlist,

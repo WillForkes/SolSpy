@@ -42,7 +42,8 @@ async function startTrackingPrices() {
                 initialLiquidity: signal.tokenInfo.liquidity,
                 initialMC: signal.tokenInfo.marketCap,
                 highestPrice: currPrice,
-                timeToHighest: timeToHighest
+                timeToHighest: timeToHighest,
+                timeCalled: parseInt(signal.time.getTime() / 1000)
             });
         } 
     }

@@ -78,10 +78,13 @@ async function main() {
 }
 
 // * Run statistics tracker every 5 minutes
-if(process.env.NODE_ENV !== 'development') {
+if(process.env.NODE_ENV !== 'developmentt') {
     cron.schedule('*/5 * * * *', () => {
+        console.log('Starting statistics tracker...')
         startTrackingPrices().catch(error => {
             console.error('Error gathering statistics:', error);
+        }).then(() => {
+            console.log('Finished gathering statistics.');
         });
     });
 }

@@ -1,13 +1,16 @@
 const bot = require('../bot');
 const { Scenes, session } = require('telegraf');
-const { getKey, redeemKey, addWalletToUserWatchlist, removeWalletFromUserWatchlist, getAllMembersWithSubscription, addDaysToAllSubscriptions } = require("../../database/databaseInterface");
+const { addSignal,  getKey, redeemKey, addWalletToUserWatchlist, removeWalletFromUserWatchlist, getAllMembersWithSubscription, addDaysToAllSubscriptions } = require("../../database/databaseInterface");
 const { isValidSolanaAddress } = require("../util");
+const { sendSignal } = require('../signals');
+const { getTokenInfo } = require('../../solana/tokenData');
 
 const redeemScene = new Scenes.BaseScene('redeemScene');
 const addWalletScene = new Scenes.BaseScene('addWalletScene');
 const removeWalletScene = new Scenes.BaseScene('removeWalletScene');
 const broadcastScene = new Scenes.BaseScene('broadcastScene');
 const addDaysScene = new Scenes.BaseScene('addDaysScene');
+const signalScene = new Scenes.BaseScene('signalScene');
 const stage = new Scenes.Stage();
 
 // ! REDEEM KEY SCENE
@@ -37,7 +40,7 @@ addWalletScene.enter((ctx) => ctx.reply(`Please reply to this message with the S
 
 Please note, wallets that have extremely high transaction volumes (such as bots, exchanges, snipers, etc) *will be removed*.
 
-_You can only track up to 3 wallets at a time._
+_You can only track up to 2 wallets at a time._
 `, { parse_mode: 'Markdown' }));
 addWalletScene.on('text', async (ctx) => {
     const inputtedWallet = ctx.message.text;
@@ -143,6 +146,34 @@ addDaysScene.on('text', async (ctx) => {
     return;
 });
 
+signalScene.enter((ctx) => ctx.reply('Please reply to this message with the contract address of the signal to push.'));
+signalScene.on('text', async (ctx) => {
+    let ca = ctx.message.text;
+
+    const tokenInfo = await getTokenInfo(ca, true);
+    if(!tokenInfo) {
+        ctx.reply('Invalid contract address. Please try again.');
+        ctx.scene.leave();
+        return;
+    }
+
+    const signal = {
+        tokenInfo,
+        time: new Date(Date.now()),
+        manual: true
+    };
+
+
+    // Log signal to DB
+    await addSignal(signal)
+
+    // Send signal out on Telegram
+    await sendSignal(signal, []);            
+
+    ctx.reply(`Successfully sent out the signal.`);   
+    ctx.scene.leave();
+    return;
+});
 
 
 stage.register(redeemScene);
@@ -150,6 +181,8 @@ stage.register(addWalletScene);
 stage.register(removeWalletScene);
 stage.register(broadcastScene);
 stage.register(addDaysScene);
+stage.register(signalScene);
+
 bot.use(session());
 bot.use(stage.middleware());
 

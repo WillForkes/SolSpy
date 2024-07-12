@@ -30,7 +30,8 @@ const SignalSchema = new Schema({
     walletAddress: String,
     time: Date,
     sellAlerts: [String],
-    sold: Number
+    sold: Number,
+    manual: Boolean
 });
 
 
