@@ -8,7 +8,7 @@ require('dotenv').config();
 
 
 async function checkWallet(walletAddress) {
-    const connection = new web3.Connection("https://quick-cosmopolitan-wildflower.solana-mainnet.quiknode.pro/310d1a487450d1023077e90f88c74b7e0e838ad9/", 'confirmed');
+    const connection = new web3.Connection("https://silent-responsive-season.solana-mainnet.quiknode.pro/0f1e1006beeaad85361f3a0e9a3148a27e7e2c84/", 'confirmed');
     const pubkey = new web3.PublicKey(walletAddress);
     let signatureArray;
     let transaction;
