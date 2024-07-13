@@ -244,8 +244,10 @@ async function getAllUserWatchlistWallets() {
     const members = await getAllMembers();
     let wallets = [];
     for (let member of members) {
-        for (let wallet of member.watching) {
-            wallets.push(wallet);
+        if(member.isSubscribed == true) {
+            for (let wallet of member.watching) {
+                wallets.push(wallet);
+            }
         }
     }
     return wallets;
