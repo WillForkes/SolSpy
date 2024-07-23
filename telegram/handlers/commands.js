@@ -193,7 +193,7 @@ bot.command('stats' , async (ctx) => {
             const winner = winners.find(winner => winner.symbol === signal.tokenInfo.symbol);
             wins++;
             winsPercent += winner.percentageIncrease;
-            stats += `📈 ${winner.symbol} | +${winner.percentageIncrease}%\n | Risk: ${signal.tokenInfo.analysis.score}/1000`;
+            stats += `📈 ${winner.symbol} | +${winner.percentageIncrease}% | Risk: ${signal.tokenInfo.analysis.score}/1000\n`;
         } else {
             losses++;
             winsPercent -= 50;
