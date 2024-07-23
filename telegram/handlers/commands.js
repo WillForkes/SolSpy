@@ -193,11 +193,11 @@ bot.command('stats' , async (ctx) => {
             const winner = winners.find(winner => winner.symbol === signal.tokenInfo.symbol);
             wins++;
             winsPercent += winner.percentageIncrease;
-            stats += `📈 ${winner.symbol} | +${winner.percentageIncrease}% | Risk: ${signal.tokenInfo.analysis.score}/1000\n`;
+            stats += `📈 ${winner.symbol} | +${winner.percentageIncrease}% | Risk: Risk: ${signal.tokenInfo.analysis.score > 600 ? '🔴' : signal.tokenInfo.analysis.score > 300 ? '🟡' : '🟢'}\n`;
         } else {
             losses++;
             winsPercent -= 50;
-            stats += `📉 ${signal.tokenInfo.symbol} | --- | Risk: ${signal.tokenInfo.analysis.score}/1000\n`;
+            stats += `📉 ${signal.tokenInfo.symbol} | --- | Risk: ${signal.tokenInfo.analysis.score > 600 ? '🔴' : signal.tokenInfo.analysis.score > 300 ? '🟡' : '🟢'}\n`;
         }
     };
 
