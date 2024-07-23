@@ -11,8 +11,8 @@ async function startTrackingPrices() {
     for(let i=0; i<signals.length; i++) {
         let signal = signals[i];
 
-        const twentyDays = Math.floor(Date.now() / 1000) - (20 * 24 * 3600);
-        if(signal.time <= twentyDays) {
+        const fivedays = Math.floor(Date.now() / 1000) - (5 * 24 * 3600);
+        if(signal.time <= fivedays) {
             continue;
         }
 

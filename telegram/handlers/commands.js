@@ -152,21 +152,8 @@ bot.command('signal', async (ctx) => {
 })
 
 bot.command('stats' , async (ctx) => {
-
     const dt = new DataTable();
 
-    //! TEMP - ADD TIMESTAMP TO ALL ENTRIES FROM SIGNAL DATABASE ACTUAL TIME
-    // for(let i=0; i<dt.data.length; i++) {
-    //     // Get signal from database
-    //     const signal = await getSignal(dt.data[i][2]);
-        
-    //     // Add timestamp to entry
-    //     // convert datetime to unix timestamp
-    //     dt.data[i][8] = parseInt(signal.time.getTime() / 1000);
-    // }
-
-    // dt.exportToCSV();
-    
     const winnerData = dt.data;
     const last10Calls = winnerData.sort((a, b) => {
         return b[8] - a[8];
@@ -206,11 +193,11 @@ bot.command('stats' , async (ctx) => {
             const winner = winners.find(winner => winner.symbol === signal.tokenInfo.symbol);
             wins++;
             winsPercent += winner.percentageIncrease;
-            stats += `📈 ${winner.symbol} | +${winner.percentageIncrease}%\n`;
+            stats += `📈 ${winner.symbol} | +${winner.percentageIncrease}%\n | Risk: ${signal.tokenInfo.analysis.score}/1000`;
         } else {
             losses++;
             winsPercent -= 50;
-            stats += `📉 ${signal.tokenInfo.symbol} | ---\n`;
+            stats += `📉 ${signal.tokenInfo.symbol} | --- | Risk: ${signal.tokenInfo.analysis.score}/1000\n`;
         }
     };
 
