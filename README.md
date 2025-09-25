@@ -7,6 +7,8 @@
 
 > **Professional-grade Solana blockchain intelligence platform that monitors profitable wallet activities and delivers real-time trading signals through Telegram.**
 
+### ⚠️ This project is no longer maintained or live. It is a past hobby project I created during the web3 'memecoin' hype on the Solana blockchain. Please use responsibly. This project does not guarantee any profitability.
+
 ## 🚀 Project Overview
 
 SolSpy is an advanced cryptocurrency intelligence system built for the Solana blockchain ecosystem. It monitors high-performing wallets in real-time, analyzes token transactions, and delivers actionable trading signals to users via a sophisticated Telegram bot interface.
